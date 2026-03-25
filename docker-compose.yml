@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: urbanleads-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: urbanleads
+      POSTGRES_PASSWORD: urbanleads_dev
+      POSTGRES_DB: urbanleads
+    ports:
+      - '5435:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

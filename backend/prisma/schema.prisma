@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  role         Role     @default(CLIENT)
+  tokenBalance Int      @default(1)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  searches     Search[]
+  transactions Transaction[]
+  redemptions  PromoRedemption[]
+}
+
+model PromoCode {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  tokensGrant Int
+  maxUses     Int?
+  uses        Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  redemptions PromoRedemption[]
+}
+
+model PromoRedemption {
+  id          String   @id @default(uuid())
+  userId      String
+  promoCodeId String
+  redeemedAt  DateTime @default(now())
+
+  user      User      @relation(fields: [userId], references: [id])
+  promoCode PromoCode @relation(fields: [promoCodeId], references: [id])
+
+  @@unique([userId, promoCodeId])
+}
+
+model Search {
+  id        String   @id @default(uuid())
+  userId    String
+  query     Json
+  results   Json
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  userId    String
+  amount    Float
+  tokens    Int
+  paystackReference String?
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
