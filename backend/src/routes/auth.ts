@@ -1,11 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { registerUser, loginUser, getMe, registerSchema, loginSchema } from '../services/auth.service';
 import { authenticate } from '../middleware/auth';
-import { rateLimit } from '../middleware/rateLimit';
+import { authRateLimit } from '../middleware/rateLimit';
 
 export const authRouter = Router();
 
-authRouter.post('/register', rateLimit, async (req: Request, res: Response) => {
+authRouter.post('/register', authRateLimit, async (req: Request, res: Response) => {
   try {
     const data = registerSchema.parse(req.body);
     const result = await registerUser(data);
@@ -19,7 +19,7 @@ authRouter.post('/register', rateLimit, async (req: Request, res: Response) => {
   }
 });
 
-authRouter.post('/login', rateLimit, async (req: Request, res: Response) => {
+authRouter.post('/login', authRateLimit, async (req: Request, res: Response) => {
   try {
     const data = loginSchema.parse(req.body);
     const result = await loginUser(data);

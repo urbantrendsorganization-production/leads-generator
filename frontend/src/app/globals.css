@@ -3,48 +3,61 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #F8FAFC;
-  --foreground: #0F172A;
-  --card: #FFFFFF;
-  --card-foreground: #0F172A;
-  --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
-  --primary: #6366F1;
-  --primary-foreground: #FFFFFF;
-  --secondary: #F1F5F9;
-  --secondary-foreground: #0F172A;
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B;
-  --accent: #F59E0B;
-  --accent-foreground: #0F172A;
-  --destructive: #EF4444;
-  --destructive-foreground: #FFFFFF;
-  --border: #E2E8F0;
-  --input: #E2E8F0;
-  --ring: #6366F1;
+  /* Light mode — bold street energy on white */
+  --background: #f5f5f5;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #FFB800;
+  --primary-foreground: #0a0a0a;
+  --secondary: #1a1a1a;
+  --secondary-foreground: #FFB800;
+  --muted: #e8e8e8;
+  --muted-foreground: #555555;
+  --accent: #FFB800;
+  --accent-foreground: #0a0a0a;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #d4d4d4;
+  --input: #d4d4d4;
+  --ring: #FFB800;
   --radius: 0.75rem;
+
+  /* Brand extended palette */
+  --brand-yellow: #FFB800;
+  --brand-gold: #F5C400;
+  --brand-black: #0a0a0a;
+  --brand-dark: #111111;
+  --brand-card: #1a1a1a;
+  --brand-glow-yellow: rgba(255, 184, 0, 0.4);
+  --brand-glow-gold: rgba(245, 196, 0, 0.35);
+  --success: #10b981;
+  --warning: #f59e0b;
 }
 
 .dark {
-  --background: #0F172A;
-  --foreground: #F8FAFC;
-  --card: #1E293B;
-  --card-foreground: #F8FAFC;
-  --popover: #1E293B;
-  --popover-foreground: #F8FAFC;
-  --primary: #818CF8;
-  --primary-foreground: #0F172A;
-  --secondary: #334155;
-  --secondary-foreground: #F8FAFC;
-  --muted: #334155;
-  --muted-foreground: #94A3B8;
-  --accent: #F59E0B;
-  --accent-foreground: #0F172A;
-  --destructive: #EF4444;
-  --destructive-foreground: #FFFFFF;
-  --border: #334155;
-  --input: #334155;
-  --ring: #818CF8;
+  /* Dark mode — near-black with yellow/gold accents */
+  --background: #0d0d0d;
+  --foreground: #ffffff;
+  --card: #1a1a1a;
+  --card-foreground: #ffffff;
+  --popover: #1a1a1a;
+  --popover-foreground: #ffffff;
+  --primary: #FFB800;
+  --primary-foreground: #0a0a0a;
+  --secondary: #222222;
+  --secondary-foreground: #FFB800;
+  --muted: #1a1a1a;
+  --muted-foreground: #888888;
+  --accent: #FFB800;
+  --accent-foreground: #0a0a0a;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #2a2a2a;
+  --input: #2a2a2a;
+  --ring: #FFB800;
 }
 
 @theme inline {
@@ -85,26 +98,174 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+/* ── Animations ─────────────────────────────────────────────────────────── */
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px 4px var(--brand-glow-yellow); }
+  50%       { box-shadow: 0 0 35px 8px var(--brand-glow-gold); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
 }
 
 .animate-fade-in {
-  animation: fade-in 0.5s ease-out forwards;
+  animation: fade-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-fade-in-delay-1 {
-  animation: fade-in 0.5s ease-out 0.1s forwards;
+  animation: fade-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.12s forwards;
   opacity: 0;
 }
 
 .animate-fade-in-delay-2 {
-  animation: fade-in 0.5s ease-out 0.2s forwards;
+  animation: fade-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.24s forwards;
   opacity: 0;
 }
 
 .animate-fade-in-delay-3 {
-  animation: fade-in 0.5s ease-out 0.3s forwards;
+  animation: fade-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.36s forwards;
   opacity: 0;
+}
+
+/* ── Gold accent text ──────────────────────────────────────────────────── */
+.gradient-text {
+  color: #FFB800;
+}
+
+.gradient-text-animated {
+  background: linear-gradient(270deg, #FFB800, #F5C400, #FFD54F, #FFB800);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 4s ease infinite;
+}
+
+/* ── Solid yellow/gold button background ──────────────────────────────── */
+.gradient-bg {
+  background: #FFB800;
+  color: #0a0a0a;
+}
+
+.gradient-bg-animated {
+  background: linear-gradient(270deg, #FFB800, #F5C400, #FFD54F, #FFB800);
+  background-size: 300% 300%;
+  animation: gradient-shift 6s ease infinite;
+  color: #0a0a0a;
+}
+
+/* ── Glassmorphism ─────────────────────────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-light {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* ── Glow utilities ────────────────────────────────────────────────────── */
+.glow-yellow {
+  box-shadow: 0 0 24px 4px var(--brand-glow-yellow);
+}
+
+.glow-gold {
+  box-shadow: 0 0 24px 4px var(--brand-glow-gold);
+}
+
+/* Keep legacy names so existing usages don't break */
+.glow-purple {
+  box-shadow: 0 0 24px 4px var(--brand-glow-yellow);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 24px 4px var(--brand-glow-gold);
+}
+
+.glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* ── Gold border card ─────────────────────────────────────────────────── */
+.gradient-border {
+  position: relative;
+  border: none !important;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: #FFB800;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ── Shimmer button effect ────────────────────────────────────────────── */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}
+
+/* ── Hero dark mesh background ─────────────────────────────────────────── */
+.hero-mesh {
+  background-color: #0d0d0d;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(255, 184, 0, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 10%, rgba(245, 196, 0, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(255, 184, 0, 0.07) 0%, transparent 60%);
+}
+
+.dark .hero-mesh {
+  background-color: #0d0d0d;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(255, 184, 0, 0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 10%, rgba(245, 196, 0, 0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(255, 184, 0, 0.08) 0%, transparent 60%);
+}
+
+/* ── Float animation ───────────────────────────────────────────────────── */
+.animate-float {
+  animation: float 4s ease-in-out infinite;
 }

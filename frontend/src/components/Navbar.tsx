@@ -4,10 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { isAuthenticated, getUser, logout } from '@/lib/auth';
 import { cn } from '@/lib/utils';
-import { Menu, X, Search, LogOut, Settings, Coins, Sun, Moon } from 'lucide-react';
+import { Menu, X, LogOut, Settings, Coins, Sun, Moon } from 'lucide-react';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -33,34 +32,61 @@ export function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-lg">
+    <nav className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-xl border-border">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex items-center justify-between">
+
+          {/* Logo Section */}
           <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <Search className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold tracking-tight">
-                Urban<span className="text-primary">Leads</span>
+            <Link href="/" className="flex items-center gap-2 group">
+              <img 
+                src="https://res.cloudinary.com/dvifkm1ex/image/upload/v1774512463/t_x4jvlv.png" 
+                alt="Logo" 
+                className="h-22 w-40 object-contain transition-transform group-hover:scale-105" 
+              />
+              <span className="text-xl font-black tracking-tight text-foreground">
+                TRENDYY <span style={{ color: '#FFB800' }}>LEADS</span>
               </span>
             </Link>
+
+            {/* Desktop Nav Links */}
             <div className="hidden md:flex items-center gap-1">
               <Link href="/pricing">
-                <Button variant="ghost" size="sm" className={cn(pathname === '/pricing' && 'bg-secondary')}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    'font-semibold',
+                    pathname === '/pricing' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
                   Pricing
                 </Button>
               </Link>
               {authed && (
                 <Link href="/dashboard">
-                  <Button variant="ghost" size="sm" className={cn(pathname === '/dashboard' && 'bg-secondary')}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      'font-semibold',
+                      pathname === '/dashboard' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
                     Dashboard
                   </Button>
                 </Link>
               )}
               {user?.role === 'ADMIN' && (
                 <Link href="/admin">
-                  <Button variant="ghost" size="sm" className={cn(pathname === '/admin' && 'bg-secondary')}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      'font-semibold',
+                      pathname === '/admin' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
                     <Settings className="h-4 w-4 mr-1" />
                     Admin
                   </Button>
@@ -69,39 +95,58 @@ export function Navbar() {
             </div>
           </div>
 
+          {/* Right-side Actions */}
           <div className="flex items-center gap-3">
             <button
               onClick={toggleTheme}
-              className="rounded-lg p-2 text-muted-foreground hover:bg-secondary transition-colors cursor-pointer"
-              aria-label="Toggle theme"
+              className="rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
             >
               {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
 
             {authed ? (
               <div className="hidden md:flex items-center gap-3">
-                <Badge variant="accent" className="gap-1 px-3 py-1">
-                  <Coins className="h-3 w-3" />
-                  {user?.tokenBalance ?? 0} tokens
-                </Badge>
-                <span className="text-sm text-muted-foreground">{user?.email}</span>
-                <Button variant="ghost" size="sm" onClick={logout}>
+                <div
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold"
+                  style={{
+                    background: 'rgba(255,184,0,0.1)',
+                    border: '1px solid rgba(255,184,0,0.3)',
+                    color: '#FFB800',
+                  }}
+                >
+                  <Coins className="h-3.5 w-3.5" />
+                  {user?.tokenBalance ?? 0}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={logout}
+                  className="text-muted-foreground hover:text-destructive"
+                >
                   <LogOut className="h-4 w-4" />
                 </Button>
               </div>
             ) : (
               <div className="hidden md:flex items-center gap-2">
                 <Link href="/login">
-                  <Button variant="ghost" size="sm">Log in</Button>
+                  <Button variant="ghost" size="sm" className="font-semibold">
+                    Log in
+                  </Button>
                 </Link>
                 <Link href="/register">
-                  <Button size="sm">Get Started</Button>
+                  <Button
+                    size="sm"
+                    className="font-black shadow-md hover:opacity-90 transition-all"
+                    style={{ background: '#FFB800', color: '#0a0a0a' }}
+                  >
+                    Get Started
+                  </Button>
                 </Link>
               </div>
             )}
 
             <button
-              className="md:hidden rounded-lg p-2 text-muted-foreground hover:bg-secondary cursor-pointer"
+              className="md:hidden rounded-lg p-2 text-muted-foreground"
               onClick={() => setMenuOpen(!menuOpen)}
             >
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -110,41 +155,26 @@ export function Navbar() {
         </div>
       </div>
 
+      {/* Mobile Menu */}
       {menuOpen && (
-        <div className="md:hidden border-t border-border bg-card p-4 space-y-2">
+        <div className="md:hidden border-t p-4 space-y-2 bg-background">
           <Link href="/pricing" onClick={() => setMenuOpen(false)}>
-            <Button variant="ghost" className="w-full justify-start">Pricing</Button>
+            <Button variant="ghost" className="w-full justify-start font-semibold">Pricing</Button>
           </Link>
           {authed ? (
-            <>
-              <Link href="/dashboard" onClick={() => setMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start">Dashboard</Button>
-              </Link>
-              {user?.role === 'ADMIN' && (
-                <Link href="/admin" onClick={() => setMenuOpen(false)}>
-                  <Button variant="ghost" className="w-full justify-start">Admin</Button>
-                </Link>
-              )}
-              <div className="flex items-center justify-between px-4 py-2">
-                <Badge variant="accent" className="gap-1 px-3 py-1">
-                  <Coins className="h-3 w-3" />
-                  {user?.tokenBalance ?? 0} tokens
-                </Badge>
-                <Button variant="ghost" size="sm" onClick={logout}>
-                  <LogOut className="h-4 w-4" />
-                  Sign out
-                </Button>
-              </div>
-            </>
+            <div className="pt-2 border-t mt-2">
+               <div className="flex items-center justify-between px-3 py-2">
+                  <span className="font-bold text-[#FFB800] flex items-center gap-2">
+                    <Coins className="h-4 w-4" /> {user?.tokenBalance ?? 0}
+                  </span>
+                  <Button variant="ghost" size="sm" onClick={logout}>Sign out</Button>
+               </div>
+            </div>
           ) : (
-            <>
-              <Link href="/login" onClick={() => setMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start">Log in</Button>
-              </Link>
-              <Link href="/register" onClick={() => setMenuOpen(false)}>
-                <Button className="w-full">Get Started</Button>
-              </Link>
-            </>
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+              <Link href="/login" className="w-full"><Button variant="outline" className="w-full">Log in</Button></Link>
+              <Link href="/register" className="w-full"><Button className="w-full font-bold" style={{ background: '#FFB800', color: '#0a0a0a' }}>Join</Button></Link>
+            </div>
           )}
         </div>
       )}

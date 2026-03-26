@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { searchLeads, getSearchHistory, searchSchema } from '../services/leads.service';
 import { authenticate } from '../middleware/auth';
+import { searchRateLimit } from '../middleware/rateLimit';
 
 export const leadsRouter = Router();
 
-leadsRouter.post('/search', authenticate, async (req: Request, res: Response) => {
+leadsRouter.post('/search', authenticate, searchRateLimit, async (req: Request, res: Response) => {
   try {
     const query = searchSchema.parse(req.body);
     const result = await searchLeads(req.user!.userId, query);

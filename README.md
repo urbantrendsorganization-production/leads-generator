@@ -1,4 +1,4 @@
-# UrbanLeads
+# TrendyyLeads
 
 A commercial leads search platform with elegant UI, token-based monetization, and Paystack payments.
 
@@ -49,7 +49,7 @@ The app will be running at `http://localhost:3000`.
 
 After seeding:
 
-- **Admin**: `admin@urbanleads.com` / `admin123`
+- **Admin**: `admin@trendyyleads.com` / `admin123`
 
 ## Promo Codes (Seeded)
 
@@ -95,7 +95,7 @@ After seeding:
 ### Backend (.env)
 
 ```
-DATABASE_URL=postgresql://urbanleads:urbanleads_dev@localhost:5432/urbanleads
+DATABASE_URL=postgresql://trendyyleads:trendyyleads_dev@localhost:5432/trendyyleads
 JWT_SECRET=your-secret-key
 PAYSTACK_SECRET_KEY=sk_test_...
 PORT=3001

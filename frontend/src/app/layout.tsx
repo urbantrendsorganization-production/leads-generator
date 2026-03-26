@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'UrbanLeads - Find Your Next Client',
-  description: 'Discover and connect with high-quality business leads instantly. Powered by UrbanLeads.',
+  title: 'TrendyyLeads — Find Leads That Convert',
+  description: 'Discover high-quality business leads with detailed contact info. Powered by TrendyyLeads.',
 };
 
 export default function RootLayout({

@@ -7,10 +7,10 @@ async function main() {
   const adminPassword = await bcrypt.hash('admin123', 12);
 
   await prisma.user.upsert({
-    where: { email: 'admin@urbanleads.com' },
+    where: { email: 'admin@trendyyleads.com' },
     update: {},
     create: {
-      email: 'admin@urbanleads.com',
+      email: 'admin@trendyyleads.com',
       name: 'Admin',
       passwordHash: adminPassword,
       role: 'ADMIN',
@@ -39,6 +39,21 @@ async function main() {
       active: true,
     },
   });
+
+  // Seed pricing tiers
+  const tiers = [
+    { tierId: 'starter', name: 'Starter', price: 9.99, tokens: 10, description: 'Perfect for trying out the platform', popular: false, sortOrder: 0 },
+    { tierId: 'growth', name: 'Growth', price: 24.99, tokens: 50, description: 'For growing businesses', popular: true, sortOrder: 1 },
+    { tierId: 'pro', name: 'Pro', price: 49.99, tokens: 150, description: 'For power users and agencies', popular: false, sortOrder: 2 },
+  ];
+
+  for (const tier of tiers) {
+    await prisma.pricingTier.upsert({
+      where: { tierId: tier.tierId },
+      update: {},
+      create: tier,
+    });
+  }
 
   console.log('Seed complete.');
 }

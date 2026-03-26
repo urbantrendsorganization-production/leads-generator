@@ -81,7 +81,10 @@ export const api = {
     checkout: (tierId: string) =>
       request<{ reference: string; url: string }>('/api/payments/checkout', {
         method: 'POST',
-        body: JSON.stringify({ tierId }),
+        body: JSON.stringify({
+          tierId,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }),
       }),
     verify: (reference: string) =>
       request<{ alreadyCredited: boolean; tokenBalance: number }>('/api/payments/verify', {
@@ -106,6 +109,14 @@ export const api = {
 
   admin: {
     users: () => request<any[]>('/api/admin/users'),
+    createUser: (data: { email: string; name?: string; role: string }) =>
+      request<any>('/api/admin/users', { method: 'POST', body: JSON.stringify(data) }),
+    updateUser: (id: string, data: { role?: string; tokenBalance?: number }) =>
+      request<any>(`/api/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+    deleteUser: (id: string) =>
+      request<any>(`/api/admin/users/${id}`, { method: 'DELETE' }),
+    resetPassword: (id: string) =>
+      request<{ tempPassword: string }>(`/api/admin/users/${id}/reset-password`, { method: 'POST' }),
     promos: () => request<any[]>('/api/admin/promos'),
     createPromo: (data: { code: string; tokensGrant: number; maxUses?: number | null }) =>
       request<any>('/api/admin/promos', {
@@ -118,6 +129,18 @@ export const api = {
         body: JSON.stringify({ active }),
       }),
     analytics: () => request<any>('/api/admin/analytics'),
+    getPricing: () => request<any[]>('/api/admin/pricing'),
+    updatePricing: (tierId: string, data: any) =>
+      request<any>(`/api/admin/pricing/${tierId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+    createPricing: (data: any) =>
+      request<any>('/api/admin/pricing', { method: 'POST', body: JSON.stringify(data) }),
+    getLeadTemplates: () => request<any[]>('/api/admin/lead-templates'),
+    upsertLeadTemplate: (industry: string, companies: string[]) =>
+      request<any>(`/api/admin/lead-templates/${encodeURIComponent(industry)}`, {
+        method: 'PUT',
+        body: JSON.stringify({ companies }),
+      }),
+    getAuditLog: () => request<any[]>('/api/admin/audit-log'),
   },
 };
 

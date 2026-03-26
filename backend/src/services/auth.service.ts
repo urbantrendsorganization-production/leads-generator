@@ -3,9 +3,14 @@ import { prisma } from '../utils/prisma';
 import { signToken } from '../utils/jwt';
 import { z } from 'zod';
 
+export const passwordSchema = z.string().regex(
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/,
+  'Password must be 8+ chars with uppercase, lowercase, and a number',
+);
+
 export const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: passwordSchema,
   name: z.string().min(1, 'Name is required').optional(),
 });
 

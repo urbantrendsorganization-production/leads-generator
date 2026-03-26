@@ -1,13 +1,26 @@
 import { Router, Request, Response } from 'express';
-import { initializeTransaction, handleWebhook, verifyAndCreditTransaction, checkoutSchema } from '../services/payments.service';
+import {
+  initializeTransaction,
+  handleWebhook,
+  verifyAndCreditTransaction,
+  checkoutSchema,
+} from '../services/payments.service';
 import { authenticate } from '../middleware/auth';
 
 export const paymentsRouter = Router();
 
 paymentsRouter.post('/checkout', authenticate, async (req: Request, res: Response) => {
   try {
-    const { tierId } = checkoutSchema.parse(req.body);
-    const result = await initializeTransaction(req.user!.userId, tierId);
+    const { tierId, timezone } = req.body;
+    checkoutSchema.parse({ tierId });
+
+    // Resolve real client IP (works behind proxies / Nginx / Render / Railway)
+    const clientIp: string =
+      (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0].trim() ||
+      req.socket.remoteAddress ||
+      '0.0.0.0';
+
+    const result = await initializeTransaction(req.user!.userId, tierId, clientIp, timezone);
     res.json(result);
   } catch (error: any) {
     if (error.name === 'ZodError') {
@@ -18,7 +31,7 @@ paymentsRouter.post('/checkout', authenticate, async (req: Request, res: Respons
   }
 });
 
-// Called by the frontend after Paystack redirect — credits tokens if webhook hasn't fired yet
+// Called by frontend after Paystack redirect — credits tokens if webhook hasn't fired yet
 paymentsRouter.post('/verify', authenticate, async (req: Request, res: Response) => {
   try {
     const { reference } = req.body;
@@ -33,9 +46,7 @@ paymentsRouter.post('/verify', authenticate, async (req: Request, res: Response)
   }
 });
 
-// Paystack webhook endpoint
-// NOTE: For production, consider whitelisting Paystack's IP addresses:
-// 52.31.139.75, 52.49.173.169, 52.214.14.220
+// Paystack webhook — whitelist IPs in production: 52.31.139.75, 52.49.173.169, 52.214.14.220
 paymentsRouter.post('/webhook', async (req: Request, res: Response) => {
   try {
     const signature = req.headers['x-paystack-signature'] as string;
