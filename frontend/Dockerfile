@@ -1,25 +1,31 @@
-# Frontend Dockerfile
 FROM node:22-alpine
+
+# 1. Install dependencies for Sharp (optimized images) and libc compatibility
+RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-# Install dependencies
-COPY package*.json ./
-RUN npm install
+# 2. Handle environment variables for the build
+# These MUST be ARGs to be passed from docker-compose during 'build'
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NODE_ENV=production
 
-# Copy source code
+COPY package*.json ./
+
+# 3. Use npm ci for a faster, more reliable "clean install" in production
+RUN npm ci
+
 COPY . .
 
-# Build Next.js
-# Note: NEXT_PUBLIC_API_URL should be set at build time if it's to be embedded in the static files.
-# For Docker Compose, we can pass it during the build process.
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-
+# 4. Build the Next.js application
+# The NEXT_PUBLIC_API_URL is embedded into the static chunks here
 RUN npm run build
 
-# Expose port
+# 5. Production setup
 EXPOSE 3000
+ENV PORT=3000
+# Ensure Next.js binds to all network interfaces inside the container
+ENV HOSTNAME="0.0.0.0"
 
-# Start the application
 CMD ["npm", "start"]
