@@ -1,34 +1,32 @@
 FROM node:22-alpine
 
-# 1. Install necessary libraries
-RUN apk add --no-cache openssl libc6-compat libcrypto3
+# 1. Install compatibility libraries for Alpine
+RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-# 2. Environment Setup for Build
-# We stay in development mode initially so npm install includes tsc
-ENV NODE_ENV=development
-ENV DATABASE_URL="postgresql://trendyyleads:trendyyleads_dev@postgres:5432/trendyyleads"
+# 2. Build Arguments (Crucial for Next.js)
+# This allows docker-compose to pass the production API URL during the build
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NODE_ENV=production
 
+# 3. Install dependencies
 COPY package*.json ./
-
-# 3. Install ALL dependencies
+# Using 'npm install' to ensure all build tools are present
 RUN npm install
 
+# 4. Copy source code
 COPY . .
 
-# 4. Cleanup and Generate Prisma
-RUN rm -rf ./node_modules/.prisma ./node_modules/@prisma/client
-ENV PRISMA_CLI_BINARY_TARGET=linux-musl-openssl-3.0.x
-RUN npx prisma generate
+# 5. Build Next.js
+# This command compiles your React code and embeds the API URL
+RUN npm run build
 
-# 5. Build the TypeScript source
-# We use 'npx' to ensure it finds the local 'tsc' binary
-RUN npx tsc
-
-EXPOSE 3001
-
-# 6. Final Production Env
-ENV NODE_ENV=production
+# 6. Production Networking
+EXPOSE 3002
+ENV PORT=3002
+# Allows Nginx to communicate with the container
+ENV HOSTNAME="0.0.0.0"
 
 CMD ["npm", "start"]
