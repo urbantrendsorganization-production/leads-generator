@@ -21,11 +21,11 @@ services:
     container_name: trendyyleads-backend
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql://trendyyleads:trendyyleads_dev@postgres:5432/trendyyleads
+      - DATABASE_URL=postgresql://trendyyleads:trendyyleads_dev@postgres:5437/trendyyleads
       - JWT_SECRET=FKIoGNN+v8YQ83x0C2v8t3ci3q6CusABBjTa7KJqs8s=
       - PAYSTACK_SECRET_KEY=sk_live_a5c69eb20aec8b812af0d1d3c7c20173de8728cb
       - PORT=3001
-      - FRONTEND_URL=http://localhost:3000
+      - FRONTEND_URL=http://localhost:3002
     ports:
       - '127.0.0.1:3001:3001'
     depends_on:
