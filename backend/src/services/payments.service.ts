@@ -178,7 +178,7 @@ export async function initializeTransaction(
     email: user.email,
     amount: amountSmallest,
     reference: transaction.id,
-    callback_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard?payment=success`,
+    callback_url: `${process.env.FRONTEND_URL || 'https://trendyyleads.com'}/dashboard/billing/success`,
     metadata: {
       transactionId: transaction.id,
       userId,
