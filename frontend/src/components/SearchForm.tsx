@@ -179,26 +179,26 @@ export function SearchForm({ onSearch, loading, disabled }: SearchFormProps) {
               Industry
             </label>
             <select
-  id="industry"
-  value={industry}
-  onChange={(e) => setIndustry(e.target.value)}
-  className={selectClassName}
-  style={{
-    background: 'rgba(255,255,255,0.05)', // The visible box
-    border: '1px solid rgba(255,255,255,0.1)',
-    color: 'white',
-  }}
->
-  {/* Add a solid background to options so they are readable in the popup */}
-  <option value="" style={{ background: '#1a1a1a', color: 'white' }}>
-    All Industries
-  </option>
-  {INDUSTRIES.map((ind) => (
-    <option key={ind} value={ind} style={{ background: '#1a1a1a', color: 'white' }}>
-      {ind}
-    </option>
-  ))}
-</select>
+              id="industry"
+              value={industry}
+              onChange={(e) => setIndustry(e.target.value)}
+              className={selectClassName}
+              style={{
+                background: 'rgba(255,255,255,0.05)', // The visible box
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'white',
+              }}
+            >
+              {/* Add a solid background to options so they are readable in the popup */}
+              <option value="" style={{ background: '#1a1a1a', color: 'white' }}>
+                All Industries
+              </option>
+              {INDUSTRIES.map((ind) => (
+                <option key={ind} value={ind} style={{ background: '#1a1a1a', color: 'white' }}>
+                  {ind}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Location */}
@@ -207,37 +207,37 @@ export function SearchForm({ onSearch, loading, disabled }: SearchFormProps) {
               Location
             </label>
             <select
-  id="location"
-  value={location}
-  onChange={(e) => setLocation(e.target.value)}
-  className={selectClassName}
-  style={{
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    color: 'var(--foreground)',
-  }}
->
-  <option value="" style={{ background: '#1a1a1a', color: 'white' }}>
-    All Locations (Worldwide)
-  </option>
-  {LOCATION_GROUPS.map((group) => (
-    <optgroup 
-      key={group.label} 
-      label={group.label} 
-      style={{ background: '#1a1a1a', color: '#94a3b8' }} // Color for the group heading
-    >
-      {group.cities.map((city) => (
-        <option 
-          key={city.value} 
-          value={city.value} 
-          style={{ background: '#1a1a1a', color: 'white' }}
-        >
-          {city.label}
-        </option>
-      ))}
-    </optgroup>
-  ))}
-</select>
+              id="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className={selectClassName}
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'var(--foreground)',
+              }}
+            >
+              <option value="" style={{ background: '#1a1a1a', color: 'white' }}>
+                All Locations (Worldwide)
+              </option>
+              {LOCATION_GROUPS.map((group) => (
+                <optgroup
+                  key={group.label}
+                  label={group.label}
+                  style={{ background: '#1a1a1a', color: '#94a3b8' }} // Color for the group heading
+                >
+                  {group.cities.map((city) => (
+                    <option
+                      key={city.value}
+                      value={city.value}
+                      style={{ background: '#1a1a1a', color: 'white' }}
+                    >
+                      {city.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
 
           {/* Company Size */}
@@ -249,15 +249,29 @@ export function SearchForm({ onSearch, loading, disabled }: SearchFormProps) {
               id="companySize"
               value={companySize}
               onChange={(e) => setCompanySize(e.target.value)}
-              className={selectClassName}
+              className={`${selectClassName} font-heading uppercase tracking-wider text-xs cursor-pointer transition-all duration-200 hover:border-[#FFB800]/50 focus:ring-1 focus:ring-[#FFB800]/30 outline-none`}
               style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                color: 'var(--foreground)',
+                background: 'rgba(255,255,255,0.03)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                color: '#ffffff',
+                padding: '0.75rem 1rem',
+                borderRadius: '8px',
+                appearance: 'none', // Removes the default arrow for a cleaner look
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23FFB800'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 1rem center',
+                backgroundSize: '1em',
               }}
             >
               {COMPANY_SIZES.map((size) => (
-                <option key={size.value} value={size.value}>{size.label}</option>
+                <option
+                  key={size.value}
+                  value={size.value}
+                  style={{ background: '#111111', color: '#ffffff' }} // Dark bg for the dropdown list
+                >
+                  {size.label.toUpperCase()}
+                </option>
               ))}
             </select>
           </div>

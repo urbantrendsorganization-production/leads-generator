@@ -51,11 +51,11 @@ export default function LoginPage() {
       >
         {/* Logo mark */}
         <div className="flex flex-col items-center mb-7">
-          <div className="flex h-13 w-13 items-center justify-center rounded-2xl gradient-bg glow-purple mb-4">
-            <Zap className="h-6 w-6 text-white" />
+          <div className="flex h-13 w-13 items-center justify-center rounded-2xl gradient-bg glow-cyan mb-4">
+            <img src="https://res.cloudinary.com/dvifkm1ex/image/upload/v1774512463/t_x4jvlv.png" alt="" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Welcome back</h1>
-          <p className="mt-1 text-sm text-slate-400">Sign in to your TrendyyLeads account</p>
+          <h1 className="text-2xl font-bold text-white">Create your account</h1>
+          <p className="mt-1 text-sm text-slate-400">Sign up and get 1 free lead search instantly</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
