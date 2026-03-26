@@ -13,6 +13,11 @@ services:
       - '127.0.0.1:5437:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trendyyleads -d trendyyleads"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
@@ -21,7 +26,8 @@ services:
     container_name: trendyyleads-backend
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql://trendyyleads:trendyyleads_dev@postgres:5437/trendyyleads
+      # Use internal port 5432 here, not 5437
+      - DATABASE_URL=postgresql://trendyyleads:trendyyleads_dev@postgres:5432/trendyyleads
       - JWT_SECRET=FKIoGNN+v8YQ83x0C2v8t3ci3q6CusABBjTa7KJqs8s=
       - PAYSTACK_SECRET_KEY=sk_live_a5c69eb20aec8b812af0d1d3c7c20173de8728cb
       - PORT=3001
@@ -29,8 +35,8 @@ services:
     ports:
       - '127.0.0.1:3001:3001'
     depends_on:
-      - postgres
-    # Run migrations then start
+      postgres:
+        condition: service_healthy
     command: >
       sh -c "npx prisma migrate deploy && npm start"
 
