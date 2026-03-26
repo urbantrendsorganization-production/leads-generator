@@ -67,7 +67,7 @@ app.use(cors({
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 
@@ -75,7 +75,7 @@ app.use(cors({
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
     // Enforce Origin header for state-changing requests
-    if (['POST', 'PUT', 'DELETE'].includes(req.method) && !req.headers.origin) {
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) && !req.headers.origin) {
       // Allow Paystack/Stripe webhooks which don't send Origin headers
       if (req.path.includes('webhook')) {
         return next();
