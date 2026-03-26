@@ -24,13 +24,39 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'TrendyyLeads — Find Leads That Convert',
-  description: 'Discover high-quality business leads with detailed contact info. Powered by TrendyyLeads.',
-  // FORCING THE FAVICON HERE
+  title: {
+    default: 'TrendyyLeads — Find Leads That Convert',
+    template: '%s | TrendyyLeads',
+  },
+  description: 'Discover high-quality business leads with detailed contact info. Search by industry, location, and company size. Powered by TrendyyLeads.',
+  metadataBase: new URL('https://trendyyleads.com'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'TrendyyLeads',
+    title: 'TrendyyLeads — Find Leads That Convert',
+    description: 'Discover high-quality business leads with detailed contact info. Search by industry, location, and company size.',
+    url: 'https://trendyyleads.com',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TrendyyLeads — Find Leads That Convert',
+    description: 'Discover high-quality business leads with detailed contact info.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
   icons: {
     icon: '/android-chrome-192x192.png',
     shortcut: '/favicon-16x16.png',
-    apple: '/apple-touch-icon.png', // You can swap this for a 180x180 png later
+    apple: '/apple-touch-icon.png',
   },
 };
 
