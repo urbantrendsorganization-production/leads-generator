@@ -1,21 +1,37 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Quantico, Share_Tech, Inter } from 'next/font/google';
 import './globals.css';
 import { Navbar } from '@/components/Navbar';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
+// Heading Font
+const quantico = Quantico({ 
+  weight: ['400', '700'],
+  subsets: ['latin'], 
+  variable: '--font-quantico' 
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
+// Data/Mono Font
+const shareTech = Share_Tech({ 
+  weight: ['400'],
+  subsets: ['latin'], 
+  variable: '--font-share-tech' 
+});
+
+// Standard Body Font
+const inter = Inter({ 
+  subsets: ['latin'], 
+  variable: '--font-inter' 
 });
 
 export const metadata: Metadata = {
   title: 'TrendyyLeads — Find Leads That Convert',
   description: 'Discover high-quality business leads with detailed contact info. Powered by TrendyyLeads.',
+  // FORCING THE FAVICON HERE
+  icons: {
+    icon: '/android-chrome-192x192.png',
+    shortcut: '/favicon-16x16.png',
+    apple: '/apple-touch-icon.png', // You can swap this for a 180x180 png later
+  },
 };
 
 export default function RootLayout({
@@ -26,7 +42,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${quantico.variable} ${shareTech.variable} ${inter.variable} h-full antialiased dark`}
       suppressHydrationWarning
     >
       <head>
@@ -34,7 +50,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                if (localStorage.getItem('theme') === 'dark') {
+                if (localStorage.getItem('theme') === 'dark' || !('theme' in localStorage)) {
                   document.documentElement.classList.add('dark');
                 }
               } catch(e) {}
@@ -42,7 +58,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col font-sans bg-[#0d0d0d] text-white">
         <Navbar />
         <main className="flex-1">{children}</main>
       </body>
