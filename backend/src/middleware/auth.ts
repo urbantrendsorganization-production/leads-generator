@@ -10,14 +10,22 @@ declare global {
 }
 
 export function authenticate(req: Request, res: Response, next: NextFunction): void {
+  // Try Authorization header first, then fall back to HttpOnly cookie
   const header = req.headers.authorization;
-  if (!header || !header.startsWith('Bearer ')) {
+  let token: string | undefined;
+
+  if (header && header.startsWith('Bearer ')) {
+    token = header.split(' ')[1];
+  } else if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+  }
+
+  if (!token) {
     res.status(401).json({ error: 'Authentication required' });
     return;
   }
 
   try {
-    const token = header.split(' ')[1];
     req.user = verifyToken(token);
     next();
   } catch {

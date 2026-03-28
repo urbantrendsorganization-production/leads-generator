@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { PricingCard } from '@/components/PricingCard';
 import { Input } from '@/components/ui/input';
@@ -91,7 +92,7 @@ export default function LandingPage() {
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05] text-white">
                 <span>Find leads that</span>
                 <br />
-                <span className="text-white">convert.</span>
+                <span className="hero-gradient-text">convert.</span>
               </h1>
 
               <p className="mt-7 max-w-xl text-lg sm:text-xl leading-relaxed" style={{ color: '#888888' }}>
@@ -103,7 +104,7 @@ export default function LandingPage() {
                 <Link href="/register">
                   <Button
                     size="lg"
-                    className="btn-shimmer gap-2 px-9 gradient-bg font-black border-0 shadow-lg hover:opacity-95 transition-all duration-300 text-base"
+                    className="btn-shimmer btn-primary-hover gap-2 px-9 gradient-bg font-black border-0 shadow-lg text-base"
                     style={{ background: '#FFB800', color: '#0a0a0a' }}
                   >
                     Start for Free
@@ -209,8 +210,34 @@ export default function LandingPage() {
               <div className="mt-10 p-6 rounded-xl bg-white/5 border border-white/10 italic text-zinc-400">
                 "TrendyyLeads turned our cold outreach into a warm conversation machine. We landed 3 major clients in our first week."
                 <div className="mt-4 flex items-center gap-3 not-italic">
-                   <div className="font-bold text-white">Sarah Jenkins</div>
-                   <div className="text-sm text-[#FFB800]">Director of Sales, TechFlow</div>
+                  <Image
+                    src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&q=80"
+                    alt="Sarah Jenkins"
+                    width={40}
+                    height={40}
+                    className="rounded-full object-cover border-2 border-[#FFB800]/40"
+                  />
+                  <div>
+                    <div className="font-bold text-white">Sarah Jenkins</div>
+                    <div className="text-sm text-[#FFB800]">Director of Sales, TechFlow</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 p-6 rounded-xl bg-white/5 border border-white/10 italic text-zinc-400">
+                "Within 48 hours of signing up, my team had a full prospecting list. The data quality is unlike anything we've used before."
+                <div className="mt-4 flex items-center gap-3 not-italic">
+                  <Image
+                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&q=80"
+                    alt="Marcus Osei"
+                    width={40}
+                    height={40}
+                    className="rounded-full object-cover border-2 border-[#FFB800]/40"
+                  />
+                  <div>
+                    <div className="font-bold text-white">Marcus Osei</div>
+                    <div className="text-sm text-[#FFB800]">Founder, GrowthStack Africa</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -266,7 +293,7 @@ export default function LandingPage() {
               { icon: Zap, title: 'Instant Results', desc: 'Sub-2 second response time so you never wait on your pipeline.' },
               { icon: Users, title: 'Team Friendly', desc: 'CSV exports, history tracking, and flexible token bundles.' },
             ].map((f) => (
-              <div key={f.title} className="flex flex-col p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1" style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div key={f.title} className="flex flex-col p-6 rounded-xl card-hover-lift" style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.07)' }}>
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl mb-4 shrink-0" style={{ background: 'rgba(255,184,0,0.14)', border: '1px solid rgba(255,184,0,0.3)' }}>
                   <f.icon className="h-5 w-5" style={{ color: '#FFB800' }} />
                 </div>
@@ -283,7 +310,7 @@ export default function LandingPage() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 text-center">
           <p className="text-sm font-black uppercase tracking-widest mb-3" style={{ color: '#FFB800' }}>Pricing</p>
           <h2 className="text-4xl font-bold text-white">Simple, Transparent Pricing</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto mt-14">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl mx-auto mt-14">
             {PRICING.map((tier) => (
               <PricingCard key={tier.id} {...tier} buttonText="Get Started" onSelect={() => { window.location.href = '/register'; }} />
             ))}

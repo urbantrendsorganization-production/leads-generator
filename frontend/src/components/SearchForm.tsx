@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Loader2, SlidersHorizontal } from 'lucide-react';
+import { Search, Loader2, SlidersHorizontal, X } from 'lucide-react';
 
 interface SearchFormProps {
   onSearch: (query: {
-    industry?: string;
-    location?: string;
+    industries?: string[];
+    locations?: string[];
     companySize?: string;
     keywords?: string;
   }) => void;
@@ -127,24 +127,177 @@ const LOCATION_GROUPS: LocationGroup[] = [
   },
 ];
 
+const ALL_LOCATIONS = LOCATION_GROUPS.flatMap((g) => g.cities);
+
+const MAX_TAGS = 5;
+
 const selectClassName =
   'flex h-10 w-full rounded-xl px-3 py-2 text-sm appearance-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50';
 
+// ─── Tag badge component ───────────────────────────────────────────────────
+function TagBadge({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium"
+      style={{
+        background: 'linear-gradient(135deg,rgba(124,58,237,0.2),rgba(6,182,212,0.15))',
+        border: '1px solid rgba(139,92,246,0.3)',
+        color: '#c4b5fd',
+      }}
+    >
+      {label}
+      <button
+        type="button"
+        onClick={onRemove}
+        className="ml-0.5 rounded-full p-0.5 transition-colors hover:bg-white/10"
+        aria-label={`Remove ${label}`}
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </span>
+  );
+}
+
+// ─── Multi-tag input with dropdown ─────────────────────────────────────────
+function TagInput({
+  tags,
+  setTags,
+  options,
+  placeholder,
+  id,
+}: {
+  tags: string[];
+  setTags: (tags: string[]) => void;
+  options: { label: string; value: string }[];
+  placeholder: string;
+  id: string;
+  grouped?: boolean;
+}) {
+  const [inputValue, setInputValue] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const addTag = useCallback(
+    (value: string) => {
+      const trimmed = value.trim();
+      if (!trimmed || tags.includes(trimmed) || tags.length >= MAX_TAGS) return;
+      setTags([...tags, trimmed]);
+      setInputValue('');
+    },
+    [tags, setTags]
+  );
+
+  const removeTag = (value: string) => {
+    setTags(tags.filter((t) => t !== value));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if ((e.key === 'Enter' || e.key === ',') && inputValue.trim()) {
+      e.preventDefault();
+      addTag(inputValue.trim());
+    }
+    if (e.key === 'Backspace' && !inputValue && tags.length > 0) {
+      removeTag(tags[tags.length - 1]);
+    }
+  };
+
+  const filteredOptions = options.filter(
+    (opt) =>
+      !tags.includes(opt.value) &&
+      opt.label.toLowerCase().includes(inputValue.toLowerCase())
+  );
+
+  const getLabelForValue = (value: string) => {
+    const opt = options.find((o) => o.value === value);
+    return opt ? opt.label : value;
+  };
+
+  return (
+    <div className="relative">
+      <div
+        className="flex flex-wrap gap-1.5 min-h-[2.5rem] rounded-xl px-3 py-1.5 text-sm transition-colors focus-within:ring-2 focus-within:ring-offset-0"
+        style={{
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.1)',
+        }}
+        onClick={() => inputRef.current?.focus()}
+      >
+        {tags.map((tag) => (
+          <TagBadge key={tag} label={getLabelForValue(tag)} onRemove={() => removeTag(tag)} />
+        ))}
+        {tags.length < MAX_TAGS && (
+          <input
+            ref={inputRef}
+            id={id}
+            type="text"
+            value={inputValue}
+            onChange={(e) => {
+              setInputValue(e.target.value);
+              setShowDropdown(true);
+            }}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setShowDropdown(true)}
+            onBlur={() => {
+              // Delay to allow dropdown click
+              setTimeout(() => setShowDropdown(false), 200);
+            }}
+            placeholder={tags.length === 0 ? placeholder : `Add up to ${MAX_TAGS - tags.length} more...`}
+            className="flex-1 min-w-[120px] bg-transparent outline-none text-white placeholder:text-slate-500 py-1"
+          />
+        )}
+      </div>
+      {tags.length >= MAX_TAGS && (
+        <p className="text-[10px] mt-1" style={{ color: '#f59e0b' }}>
+          Maximum {MAX_TAGS} tags reached
+        </p>
+      )}
+
+      {/* Dropdown */}
+      {showDropdown && filteredOptions.length > 0 && tags.length < MAX_TAGS && (
+        <div
+          className="absolute z-50 mt-1 w-full max-h-48 overflow-auto rounded-xl py-1 text-sm shadow-xl"
+          style={{
+            background: '#1a1a1a',
+            border: '1px solid rgba(139,92,246,0.3)',
+          }}
+        >
+          {filteredOptions.slice(0, 20).map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                addTag(opt.value);
+              }}
+              className="flex w-full items-center px-3 py-1.5 text-left transition-colors hover:bg-white/5 text-slate-300 hover:text-white"
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main SearchForm ───────────────────────────────────────────────────────
 export function SearchForm({ onSearch, loading, disabled }: SearchFormProps) {
-  const [industry, setIndustry] = useState('');
-  const [location, setLocation] = useState('');
+  const [industries, setIndustries] = useState<string[]>([]);
+  const [locations, setLocations] = useState<string[]>([]);
   const [companySize, setCompanySize] = useState('');
   const [keywords, setKeywords] = useState('');
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onSearch({
-      industry: industry || undefined,
-      location: location || undefined,
+      industries: industries.length > 0 ? industries : undefined,
+      locations: locations.length > 0 ? locations : undefined,
       companySize: companySize || undefined,
       keywords: keywords || undefined,
     });
   }
+
+  const industryOptions = INDUSTRIES.map((ind) => ({ label: ind, value: ind }));
 
   return (
     <div
@@ -173,71 +326,33 @@ export function SearchForm({ onSearch, loading, disabled }: SearchFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Industry */}
+          {/* Industry — multi-tag */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-500" htmlFor="industry">
-              Industry
+              Industries <span className="text-slate-600 normal-case font-normal">(up to {MAX_TAGS})</span>
             </label>
-            <select
+            <TagInput
               id="industry"
-              value={industry}
-              onChange={(e) => setIndustry(e.target.value)}
-              className={selectClassName}
-              style={{
-                background: 'rgba(255,255,255,0.05)', // The visible box
-                border: '1px solid rgba(255,255,255,0.1)',
-                color: 'white',
-              }}
-            >
-              {/* Add a solid background to options so they are readable in the popup */}
-              <option value="" style={{ background: '#1a1a1a', color: 'white' }}>
-                All Industries
-              </option>
-              {INDUSTRIES.map((ind) => (
-                <option key={ind} value={ind} style={{ background: '#1a1a1a', color: 'white' }}>
-                  {ind}
-                </option>
-              ))}
-            </select>
+              tags={industries}
+              setTags={setIndustries}
+              options={industryOptions}
+              placeholder="Select or type industry..."
+            />
           </div>
 
-          {/* Location */}
+          {/* Location — multi-tag */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-500" htmlFor="location">
-              Location
+              Locations <span className="text-slate-600 normal-case font-normal">(up to {MAX_TAGS})</span>
             </label>
-            <select
+            <TagInput
               id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className={selectClassName}
-              style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                color: 'var(--foreground)',
-              }}
-            >
-              <option value="" style={{ background: '#1a1a1a', color: 'white' }}>
-                All Locations (Worldwide)
-              </option>
-              {LOCATION_GROUPS.map((group) => (
-                <optgroup
-                  key={group.label}
-                  label={group.label}
-                  style={{ background: '#1a1a1a', color: '#94a3b8' }} // Color for the group heading
-                >
-                  {group.cities.map((city) => (
-                    <option
-                      key={city.value}
-                      value={city.value}
-                      style={{ background: '#1a1a1a', color: 'white' }}
-                    >
-                      {city.label}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+              tags={locations}
+              setTags={setLocations}
+              options={ALL_LOCATIONS}
+              placeholder="Select or type location..."
+              grouped
+            />
           </div>
 
           {/* Company Size */}
@@ -257,7 +372,7 @@ export function SearchForm({ onSearch, loading, disabled }: SearchFormProps) {
                 color: '#ffffff',
                 padding: '0.75rem 1rem',
                 borderRadius: '8px',
-                appearance: 'none', // Removes the default arrow for a cleaner look
+                appearance: 'none',
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23FFB800'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'right 1rem center',
@@ -268,7 +383,7 @@ export function SearchForm({ onSearch, loading, disabled }: SearchFormProps) {
                 <option
                   key={size.value}
                   value={size.value}
-                  style={{ background: '#111111', color: '#ffffff' }} // Dark bg for the dropdown list
+                  style={{ background: '#111111', color: '#ffffff' }}
                 >
                   {size.label.toUpperCase()}
                 </option>
@@ -297,9 +412,10 @@ export function SearchForm({ onSearch, loading, disabled }: SearchFormProps) {
         {/* Submit */}
         <Button
           type="submit"
-          className="w-full btn-shimmer gradient-bg text-white font-bold border-0 shadow-[0_0_20px_rgba(124,58,237,0.35)] hover:shadow-[0_0_32px_rgba(124,58,237,0.55)] hover:opacity-95 transition-all duration-300"
+          className="w-full btn-shimmer btn-primary-hover font-black border-0 shadow-[0_0_20px_rgba(255,184,0,0.25)]"
           size="lg"
           disabled={loading || disabled}
+          style={{ background: '#FFB800', color: '#0a0a0a', minHeight: '48px' }}
         >
           {loading ? (
             <>

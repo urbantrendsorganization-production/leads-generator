@@ -1,21 +1,34 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import crypto from 'crypto';
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { authRouter } from './routes/auth';
 import { leadsRouter } from './routes/leads';
 import { promosRouter } from './routes/promos';
 import { paymentsRouter } from './routes/payments';
 import { adminRouter } from './routes/admin';
 import { pricingRouter } from './routes/pricing';
+import { realtimeRouter } from './routes/realtime';
 import { sanitize } from './middleware/sanitize';
+import { csrfProtection } from './middleware/csrf';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const IS_PROD = process.env.NODE_ENV === 'production';
 
 // Since we are behind Nginx, we must trust the proxy headers (X-Forwarded-For, etc.)
 app.set('trust proxy', 1);
+
+// ─── Request ID tracking ──────────────────────────────────────────────────
+app.use((req, res, next) => {
+  const requestId = crypto.randomUUID();
+  (req as any).requestId = requestId;
+  res.setHeader('X-Request-Id', requestId);
+  next();
+});
 
 // ─── Security headers ──────────────────────────────────────────────────────
 app.use((_req, res, next) => {
@@ -24,6 +37,10 @@ app.use((_req, res, next) => {
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.paystack.co https://autocomplete.clearbit.com; frame-src https://www.google.com"
+  );
   res.removeHeader('X-Powered-By');
   next();
 });
@@ -68,7 +85,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token'],
 }));
 
 // ─── Production Middleware ──────────────────────────────────────────────────
@@ -86,12 +103,18 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+// Cookie parser — needed for HttpOnly auth cookie and CSRF
+app.use(cookieParser());
+
 // Webhook needs raw body — must come before express.json()
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '50kb' }));
 
 // Input sanitization
 app.use(sanitize);
+
+// CSRF protection for state-changing routes (skips webhooks)
+app.use(csrfProtection);
 
 // Health Check
 app.get('/api/health', (_req, res) => {
@@ -109,14 +132,24 @@ app.use('/api/promos', promosRouter);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/pricing', pricingRouter);
+app.use('/api/realtime', realtimeRouter);
 
-// Error Handling
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+// Error Handling — central handler, never leaks stack traces in production
+app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const requestId = (req as any).requestId || 'unknown';
+
   if (err.message === 'Not allowed by CORS') {
-    return res.status(403).json({ error: 'CORS policy violation' });
+    return res.status(403).json({ error: 'CORS policy violation', requestId });
   }
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+
+  // Always log full error internally
+  console.error(`[${requestId}] Unhandled error:`, IS_PROD ? err.message : err);
+
+  res.status(500).json({
+    error: 'Internal server error',
+    requestId,
+    ...(IS_PROD ? {} : { message: err.message, stack: err.stack }),
+  });
 });
 
 app.listen(PORT, () => {

@@ -38,13 +38,13 @@ export function Navbar() {
 
           {/* Logo Section */}
           <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2 group">
-              <img 
-                src="https://res.cloudinary.com/dvifkm1ex/image/upload/v1774512463/t_x4jvlv.png" 
-                alt="Logo" 
-                className="h-22 w-40 object-contain transition-transform group-hover:scale-105" 
+            <Link href="/" className="flex items-center gap-2 group min-w-0">
+              <img
+                src="https://res.cloudinary.com/dvifkm1ex/image/upload/v1774512463/t_x4jvlv.png"
+                alt="Logo"
+                className="h-8 w-8 object-contain shrink-0 transition-transform group-hover:scale-105"
               />
-              <span className="text-xl font-black tracking-tight text-foreground">
+              <span className="text-lg sm:text-xl font-black tracking-tight text-foreground truncate">
                 TRENDYY <span style={{ color: '#FFB800' }}>LEADS</span>
               </span>
             </Link>
@@ -157,23 +157,61 @@ export function Navbar() {
 
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className="md:hidden border-t p-4 space-y-2 bg-background">
+        <div className="md:hidden border-t p-4 space-y-1 bg-background animate-fade-in">
           <Link href="/pricing" onClick={() => setMenuOpen(false)}>
-            <Button variant="ghost" className="w-full justify-start font-semibold">Pricing</Button>
+            <Button variant="ghost" className="w-full justify-start font-semibold" style={{ minHeight: '44px' }}>
+              Pricing
+            </Button>
           </Link>
+          {authed && (
+            <Link href="/dashboard" onClick={() => setMenuOpen(false)}>
+              <Button
+                variant="ghost"
+                className="w-full justify-start font-semibold"
+                style={{ minHeight: '44px' }}
+              >
+                Dashboard
+              </Button>
+            </Link>
+          )}
+          {user?.role === 'ADMIN' && (
+            <Link href="/admin" onClick={() => setMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start font-semibold" style={{ minHeight: '44px' }}>
+                <Settings className="h-4 w-4 mr-2" />
+                Admin
+              </Button>
+            </Link>
+          )}
           {authed ? (
             <div className="pt-2 border-t mt-2">
-               <div className="flex items-center justify-between px-3 py-2">
-                  <span className="font-bold text-[#FFB800] flex items-center gap-2">
-                    <Coins className="h-4 w-4" /> {user?.tokenBalance ?? 0}
-                  </span>
-                  <Button variant="ghost" size="sm" onClick={logout}>Sign out</Button>
-               </div>
+              <div className="flex items-center justify-between px-3 py-2">
+                <span
+                  className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold"
+                  style={{
+                    background: 'rgba(255,184,0,0.12)',
+                    border: '1px solid rgba(255,184,0,0.3)',
+                    color: '#FFB800',
+                  }}
+                >
+                  <Coins className="h-4 w-4" />
+                  {user?.tokenBalance ?? 0} tokens
+                </span>
+                <Button variant="ghost" size="sm" onClick={logout} className="text-muted-foreground hover:text-destructive">
+                  <LogOut className="h-4 w-4 mr-1" />
+                  Sign out
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-2 pt-2 border-t">
-              <Link href="/login" className="w-full"><Button variant="outline" className="w-full">Log in</Button></Link>
-              <Link href="/register" className="w-full"><Button className="w-full font-bold" style={{ background: '#FFB800', color: '#0a0a0a' }}>Join</Button></Link>
+              <Link href="/login" className="w-full">
+                <Button variant="outline" className="w-full font-semibold" style={{ minHeight: '44px' }}>Log in</Button>
+              </Link>
+              <Link href="/register" className="w-full">
+                <Button className="w-full font-black" style={{ background: '#FFB800', color: '#0a0a0a', minHeight: '44px' }}>
+                  Join Free
+                </Button>
+              </Link>
             </div>
           )}
         </div>

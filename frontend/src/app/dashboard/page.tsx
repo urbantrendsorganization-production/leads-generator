@@ -9,8 +9,8 @@ import { LeadCard } from '@/components/LeadCard';
 import { TokenBadge } from '@/components/TokenBadge';
 import { PromoModal } from '@/components/PromoModal';
 import { PricingCard } from '@/components/PricingCard';
-import { api, ApiError } from '@/lib/api';
-import { isAuthenticated, getUser, setUser } from '@/lib/auth';
+import { api, ApiError, API_URL, fetchCsrfToken } from '@/lib/api';
+import { isAuthenticated, getUser, setUser, getToken } from '@/lib/auth';
 import { detectUserCurrency, formatLocalPrice, type CurrencyInfo } from '@/lib/currency';
 import {
   Loader2,
@@ -21,7 +21,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   Download,
-  Zap,
+  ClockIcon,
+  MapPin,
 } from 'lucide-react';
 
 interface Lead {
@@ -29,12 +30,14 @@ interface Lead {
   contactName: string;
   email: string;
   phone: string;
+  whatsapp?: string;
   website: string;
   industry: string;
   location: string;
   companySize: string;
   title: string;
   linkedinUrl?: string;
+  mapsUrl?: string;
   confidence?: 'high' | 'medium';
 }
 
@@ -74,6 +77,8 @@ function DashboardContent() {
   const [verifyTimedOut, setVerifyTimedOut] = useState(false);
   const [currency, setCurrency] = useState<CurrencyInfo | null>(null);
 
+  const [lastSearchedLocations, setLastSearchedLocations] = useState<string[]>([]);
+
   const refreshUser = useCallback(async () => {
     try {
       const u = await api.auth.me();
@@ -87,6 +92,45 @@ function DashboardContent() {
   // Detect user's local currency for display
   useEffect(() => {
     detectUserCurrency().then(setCurrency).catch(() => {});
+  }, []);
+
+  // Fetch CSRF token on mount
+  useEffect(() => {
+    fetchCsrfToken();
+  }, []);
+
+  // SSE: real-time token balance updates
+  useEffect(() => {
+    if (!isAuthenticated()) return;
+    const token = getToken();
+    if (!token) return;
+
+    // Use a URL with token as query param for EventSource (no custom headers support)
+    const eventSource = new EventSource(
+      `${API_URL}/api/realtime/token-balance?token=${encodeURIComponent(token)}`,
+      { withCredentials: true }
+    );
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (typeof data.tokenBalance === 'number') {
+          setUserState((prev: any) =>
+            prev ? { ...prev, tokenBalance: data.tokenBalance } : prev
+          );
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    };
+
+    eventSource.onerror = () => {
+      // EventSource will auto-reconnect
+    };
+
+    return () => {
+      eventSource.close();
+    };
   }, []);
 
   useEffect(() => {
@@ -160,6 +204,10 @@ function DashboardContent() {
     setSearchError('');
     setResults([]);
 
+    // Track searched locations for Google Maps display
+    const locs: string[] = query.locations || [];
+    setLastSearchedLocations(locs);
+
     try {
       const result = await api.leads.search(query);
       setResults(result.results);
@@ -216,7 +264,7 @@ function DashboardContent() {
 
   function downloadCSV() {
     if (results.length === 0) return;
-    const headers = ['Company', 'Contact', 'Title', 'Email', 'Phone', 'Website', 'Industry', 'Location', 'Company Size', 'LinkedIn', 'Confidence'];
+    const headers = ['Company', 'Contact', 'Title', 'Email', 'Phone', 'WhatsApp', 'Website', 'Industry', 'Location', 'Company Size', 'LinkedIn', 'Maps URL', 'Confidence'];
     const escape = (val: string) => {
       if (val.includes(',') || val.includes('"') || val.includes('\n')) {
         return `"${val.replace(/"/g, '""')}"`;
@@ -229,11 +277,13 @@ function DashboardContent() {
       lead.title,
       lead.email,
       lead.phone,
+      user?.isPremium ? (lead.whatsapp || '') : '',
       lead.website,
       lead.industry,
       lead.location,
       lead.companySize,
       lead.linkedinUrl || '',
+      lead.mapsUrl || '',
       lead.confidence || 'medium',
     ].map(escape).join(','));
 
@@ -264,7 +314,7 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#0d0d0d', color: '#ffffff' }}>
+    <div className="min-h-screen dashboard-bg" style={{ color: '#ffffff' }}>
 
       {/* Dashboard header bar */}
       <div
@@ -421,8 +471,90 @@ function DashboardContent() {
           </div>
         )}
 
+        {/* Skeleton loading cards while searching */}
+        {searching && (
+          <div className="space-y-3 animate-fade-in">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="skeleton h-5 w-32" />
+            </div>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="rounded-xl p-5 space-y-3"
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.07)',
+                }}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-2 flex-1">
+                    <div className="skeleton h-4 w-48" />
+                    <div className="flex gap-2">
+                      <div className="skeleton h-5 w-24 rounded-full" />
+                      <div className="skeleton h-5 w-20 rounded-full" />
+                    </div>
+                  </div>
+                  <div className="skeleton h-4 w-16" />
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div className="skeleton h-4 w-40" />
+                  <div className="skeleton h-4 w-32" />
+                  <div className="skeleton h-4 w-44" />
+                  <div className="skeleton h-4 w-28" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Google Maps embed for searched location */}
+        {!searching && results.length > 0 && lastSearchedLocations.length > 0 && (
+          <div className="animate-fade-in">
+            {(() => {
+              const mapsKey = typeof window !== 'undefined'
+                ? (process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || '')
+                : '';
+              const locationQuery = lastSearchedLocations.join(', ');
+              if (mapsKey) {
+                return (
+                  <div
+                    className="rounded-xl overflow-hidden"
+                    style={{ border: '1px solid rgba(255,184,0,0.15)' }}
+                  >
+                    <iframe
+                      width="100%"
+                      height="200"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                      allowFullScreen
+                      referrerPolicy="no-referrer-when-downgrade"
+                      src={`https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q=${encodeURIComponent(locationQuery)}`}
+                    />
+                  </div>
+                );
+              }
+              return (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-xl p-3 text-sm font-medium transition-colors hover:opacity-90"
+                  style={{
+                    background: 'rgba(16,185,129,0.08)',
+                    border: '1px solid rgba(16,185,129,0.2)',
+                    color: '#34d399',
+                  }}
+                >
+                  <MapPin className="h-4 w-4" />
+                  View {locationQuery} on Google Maps
+                </a>
+              );
+            })()}
+          </div>
+        )}
+
         {/* Results */}
-        {results.length > 0 && (
+        {!searching && results.length > 0 && (
           <div className="space-y-4 animate-fade-in">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold flex items-center gap-2 text-white">
@@ -450,7 +582,7 @@ function DashboardContent() {
             </div>
             <div className="grid gap-3">
               {results.map((lead, i) => (
-                <LeadCard key={i} lead={lead} />
+                <LeadCard key={i} lead={lead} isPremium={!!user?.isPremium} />
               ))}
             </div>
           </div>
@@ -511,16 +643,31 @@ function DashboardContent() {
                       >
                         {resultCount} leads
                       </span>
-                      {query.industry && (
-                        <Badge variant="outline" className="text-xs" style={{ borderColor: 'rgba(255,255,255,0.12)', color: '#888888' }}>
-                          {query.industry}
-                        </Badge>
-                      )}
-                      {query.location && (
-                        <Badge variant="outline" className="text-xs" style={{ borderColor: 'rgba(255,255,255,0.12)', color: '#888888' }}>
-                          {query.location}
-                        </Badge>
-                      )}
+                      {/* Support both legacy (industry/location string) and new (industries/locations array) */}
+                      {query.industries && Array.isArray(query.industries)
+                        ? query.industries.map((ind: string) => (
+                            <Badge key={ind} variant="outline" className="text-xs" style={{ borderColor: 'rgba(255,255,255,0.12)', color: '#888888' }}>
+                              {ind}
+                            </Badge>
+                          ))
+                        : query.industry && (
+                            <Badge variant="outline" className="text-xs" style={{ borderColor: 'rgba(255,255,255,0.12)', color: '#888888' }}>
+                              {query.industry}
+                            </Badge>
+                          )
+                      }
+                      {query.locations && Array.isArray(query.locations)
+                        ? query.locations.map((loc: string) => (
+                            <Badge key={loc} variant="outline" className="text-xs" style={{ borderColor: 'rgba(255,255,255,0.12)', color: '#888888' }}>
+                              {loc}
+                            </Badge>
+                          ))
+                        : query.location && (
+                            <Badge variant="outline" className="text-xs" style={{ borderColor: 'rgba(255,255,255,0.12)', color: '#888888' }}>
+                              {query.location}
+                            </Badge>
+                          )
+                      }
                       {query.companySize && (
                         <Badge variant="outline" className="text-xs" style={{ borderColor: 'rgba(255,255,255,0.12)', color: '#888888' }}>
                           {query.companySize}
@@ -539,7 +686,24 @@ function DashboardContent() {
           )}
 
           {showHistory && history.length === 0 && (
-            <p className="mt-4 text-sm" style={{ color: '#888888' }}>No search history yet.</p>
+            <div
+              className="mt-4 flex flex-col items-center justify-center py-12 rounded-xl text-center animate-fade-in"
+              style={{
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.06)',
+              }}
+            >
+              <div
+                className="flex h-14 w-14 items-center justify-center rounded-2xl mb-4"
+                style={{ background: 'rgba(255,184,0,0.1)', border: '1px solid rgba(255,184,0,0.2)' }}
+              >
+                <ClockIcon className="h-7 w-7" style={{ color: '#FFB800' }} />
+              </div>
+              <h3 className="text-base font-semibold text-white mb-1">No history yet</h3>
+              <p className="text-sm max-w-xs" style={{ color: '#888888' }}>
+                Your search history will appear here after your first lead search.
+              </p>
+            </div>
           )}
         </div>
       </div>

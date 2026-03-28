@@ -50,27 +50,91 @@ export async function registerUser(data: z.infer<typeof registerSchema>) {
   };
 }
 
+// ─── Account lockout tracking (in-memory) ──────────────────────────────────
+const loginAttempts = new Map<string, { count: number; lockedUntil: number }>();
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
+// Cleanup stale entries every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of loginAttempts.entries()) {
+    if (now > entry.lockedUntil + LOCKOUT_DURATION_MS) {
+      loginAttempts.delete(key);
+    }
+  }
+}, 5 * 60 * 1000);
+
+function checkAndRecordAttempt(email: string, success: boolean): void {
+  const now = Date.now();
+  const entry = loginAttempts.get(email);
+
+  if (entry && entry.lockedUntil > now) {
+    const remainingMin = Math.ceil((entry.lockedUntil - now) / 60_000);
+    throw new Error(`Account temporarily locked. Try again in ${remainingMin} minute(s).`);
+  }
+
+  if (success) {
+    loginAttempts.delete(email);
+    return;
+  }
+
+  // Record failed attempt
+  if (!entry || now > entry.lockedUntil) {
+    loginAttempts.set(email, { count: 1, lockedUntil: now + LOCKOUT_WINDOW_MS });
+  } else {
+    entry.count++;
+    if (entry.count >= MAX_ATTEMPTS) {
+      entry.lockedUntil = now + LOCKOUT_DURATION_MS;
+      throw new Error('Too many failed login attempts. Account locked for 15 minutes.');
+    }
+  }
+}
+
 export async function loginUser(data: z.infer<typeof loginSchema>) {
+  // Check if locked before doing anything
+  const existingEntry = loginAttempts.get(data.email);
+  if (existingEntry && existingEntry.lockedUntil > Date.now()) {
+    const remainingMin = Math.ceil((existingEntry.lockedUntil - Date.now()) / 60_000);
+    throw new Error(`Account temporarily locked. Try again in ${remainingMin} minute(s).`);
+  }
+
   const user = await prisma.user.findUnique({ where: { email: data.email } });
   if (!user) {
+    checkAndRecordAttempt(data.email, false);
     throw new Error('Invalid email or password');
   }
 
   const valid = await bcrypt.compare(data.password, user.passwordHash);
   if (!valid) {
+    checkAndRecordAttempt(data.email, false);
     throw new Error('Invalid email or password');
+  }
+
+  // Successful login — clear lockout
+  checkAndRecordAttempt(data.email, true);
+
+  // If user had a temp password, clear it on successful login
+  if (user.mustChangePassword) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { mustChangePassword: false },
+    });
   }
 
   const token = signToken({ userId: user.id, email: user.email, role: user.role });
 
   return {
     token,
+    mustChangePassword: user.mustChangePassword,
     user: {
       id: user.id,
       email: user.email,
       name: user.name,
       role: user.role,
       tokenBalance: user.tokenBalance,
+      mustChangePassword: user.mustChangePassword,
     },
   };
 }
@@ -84,6 +148,7 @@ export async function getMe(userId: string) {
       name: true,
       role: true,
       tokenBalance: true,
+      mustChangePassword: true,
       createdAt: true,
     },
   });
@@ -92,5 +157,15 @@ export async function getMe(userId: string) {
     throw new Error('User not found');
   }
 
-  return user;
+  // Premium check: user has any completed transaction OR tokenBalance >= 5
+  const completedTxCount = await prisma.transaction.count({
+    where: { userId, status: 'completed' },
+  });
+
+  const isPremium = completedTxCount > 0 || user.tokenBalance >= 5;
+
+  return {
+    ...user,
+    isPremium,
+  };
 }

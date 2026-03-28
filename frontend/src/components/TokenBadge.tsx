@@ -1,6 +1,5 @@
 'use client';
 
-import { Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TokenBadgeProps {
@@ -15,34 +14,65 @@ export function TokenBadge({ balance, className }: TokenBadgeProps) {
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold transition-all',
+        'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all',
         className
       )}
       style={
         isEmpty
           ? {
-              background: 'rgba(239,68,68,0.15)',
+              background: 'rgba(239,68,68,0.12)',
               border: '1px solid rgba(239,68,68,0.35)',
               color: '#f87171',
-              boxShadow: '0 0 12px rgba(239,68,68,0.2)',
+              boxShadow: '0 0 16px rgba(239,68,68,0.15)',
             }
           : isLow
           ? {
-              background: 'rgba(245,158,11,0.15)',
-              border: '1px solid rgba(245,158,11,0.35)',
+              background: 'rgba(245,158,11,0.12)',
+              border: '1px solid rgba(245,158,11,0.4)',
               color: '#fbbf24',
-              boxShadow: '0 0 12px rgba(245,158,11,0.2)',
+              boxShadow: '0 0 16px rgba(245,158,11,0.2)',
             }
           : {
-              background: 'linear-gradient(135deg,rgba(124,58,237,0.22),rgba(6,182,212,0.18))',
-              border: '1px solid rgba(139,92,246,0.45)',
-              color: '#c4b5fd',
-              boxShadow: '0 0 14px rgba(124,58,237,0.25)',
+              background: 'linear-gradient(135deg,rgba(255,184,0,0.18),rgba(245,196,0,0.1))',
+              border: '1px solid rgba(255,184,0,0.45)',
+              color: '#FFB800',
+              boxShadow: '0 0 20px rgba(255,184,0,0.2)',
             }
       }
     >
-      <Coins className="h-3.5 w-3.5" />
-      {balance} {balance === 1 ? 'search' : 'searches'} remaining
+      {/* Gold coin SVG icon */}
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+        style={{ flexShrink: 0 }}
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          fill={isEmpty ? 'rgba(239,68,68,0.15)' : isLow ? 'rgba(245,158,11,0.15)' : 'rgba(255,184,0,0.2)'}
+        />
+        <text
+          x="12"
+          y="16"
+          textAnchor="middle"
+          fontSize="11"
+          fontWeight="bold"
+          fill="currentColor"
+          fontFamily="system-ui"
+        >
+          ₮
+        </text>
+      </svg>
+      <span className="font-black text-base leading-none">{balance}</span>
+      <span className="text-xs font-semibold opacity-80 leading-none">
+        {balance === 1 ? 'search' : 'searches'}
+      </span>
     </div>
   );
 }

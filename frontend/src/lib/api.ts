@@ -27,9 +27,16 @@ async function request<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // Include CSRF token if present in localStorage
+  const csrfToken = typeof window !== 'undefined' ? localStorage.getItem('csrf_token') : null;
+  if (csrfToken && ['POST', 'PUT', 'PATCH', 'DELETE'].includes((options.method || 'GET').toUpperCase())) {
+    headers['X-CSRF-Token'] = csrfToken;
+  }
+
   const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: 'include', // Send HttpOnly cookies
   });
 
   if (!res.ok) {
@@ -38,6 +45,21 @@ async function request<T>(
   }
 
   return res.json();
+}
+
+/** Fetch and store CSRF token */
+async function fetchCsrfToken(): Promise<void> {
+  try {
+    const res = await fetch(`${API_URL}/api/auth/csrf`, { credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.csrfToken && typeof window !== 'undefined') {
+        localStorage.setItem('csrf_token', data.csrfToken);
+      }
+    }
+  } catch {
+    // Non-critical — CSRF is gradually adopted
+  }
 }
 
 export const api = {
@@ -57,8 +79,8 @@ export const api = {
 
   leads: {
     search: (query: {
-      industry?: string;
-      location?: string;
+      industries?: string[];
+      locations?: string[];
       companySize?: string;
       keywords?: string;
     }) =>
@@ -144,4 +166,4 @@ export const api = {
   },
 };
 
-export { ApiError };
+export { ApiError, fetchCsrfToken, API_URL };

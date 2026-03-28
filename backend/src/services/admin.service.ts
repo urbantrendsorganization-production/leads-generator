@@ -62,6 +62,7 @@ export async function createStaff(
       passwordHash,
       role: data.role === 'ADMIN' ? 'ADMIN' : 'CLIENT',
       tokenBalance: 1,
+      mustChangePassword: true,
     },
   });
 
@@ -129,7 +130,7 @@ export async function resetUserPassword(adminEmail: string, userId: string) {
   const passwordHash = await bcrypt.hash(tempPassword, 12);
   await prisma.user.update({
     where: { id: userId },
-    data: { passwordHash },
+    data: { passwordHash, mustChangePassword: true },
   });
 
   auditLog.record(adminEmail, 'RESET_PASSWORD', user.email, '');

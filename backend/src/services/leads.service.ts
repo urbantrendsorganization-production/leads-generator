@@ -1,9 +1,14 @@
 import { prisma } from '../utils/prisma';
 import { z } from 'zod';
 
+const tagItem = z.string().max(50);
+
 export const searchSchema = z.object({
-  industry: z.string().optional(),
-  location: z.string().optional(),
+  // Support both single string (legacy) and array of tags (new)
+  industry: z.union([tagItem, z.array(tagItem).max(5)]).optional(),
+  location: z.union([tagItem, z.array(tagItem).max(5)]).optional(),
+  industries: z.array(tagItem.min(1)).max(5).optional(),
+  locations: z.array(tagItem.min(1)).max(5).optional(),
   companySize: z.string().optional(),
   keywords: z.string().optional(),
 });
@@ -13,12 +18,14 @@ interface Lead {
   contactName: string;
   email: string;
   phone: string;
+  whatsapp: string;
   website: string;
   industry: string;
   location: string;
   companySize: string;
   title: string;
   linkedinUrl: string;
+  mapsUrl: string;
   confidence: 'high' | 'medium';
 }
 
@@ -251,6 +258,22 @@ function generatePhoneForLocation(location: string): string {
   return `+1 (${d(3)}) ${d(3)}-${d(4)}`;
 }
 
+function generateWhatsAppForLocation(location: string): string {
+  // WhatsApp numbers are in international format without spaces/formatting
+  const loc = location.toLowerCase();
+  for (const [country, formatter] of Object.entries(COUNTRY_PHONE_FORMATS)) {
+    if (loc.includes(country)) {
+      return formatter().replace(/[\s()-]/g, '');
+    }
+  }
+  return `+1${d(3)}${d(3)}${d(4)}`;
+}
+
+function buildMapsUrl(companyName: string, location: string): string {
+  const query = `${companyName} ${location}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
 const COMPANY_SIZES = ['1-10', '11-50', '51-200', '201-500', '500+'];
 
 function pick<T>(arr: T[]): T {
@@ -275,6 +298,36 @@ async function fetchClearbitCompanies(query: string): Promise<ClearbitCompany[]>
   }
 }
 
+/** Normalize query fields — callers may send `industry` (string), `industries` (array), or both. */
+function resolveIndustries(query: z.infer<typeof searchSchema>): string[] {
+  const arr: string[] = [];
+  if (query.industries && query.industries.length > 0) {
+    arr.push(...query.industries);
+  } else if (typeof query.industry === 'string' && query.industry) {
+    arr.push(query.industry);
+  } else if (Array.isArray(query.industry)) {
+    arr.push(...query.industry);
+  }
+  return arr.length > 0 ? arr : [''];
+}
+
+function resolveLocations(query: z.infer<typeof searchSchema>): string[] {
+  const arr: string[] = [];
+  if (query.locations && query.locations.length > 0) {
+    arr.push(...query.locations);
+  } else if (typeof query.location === 'string' && query.location) {
+    arr.push(query.location);
+  } else if (Array.isArray(query.location)) {
+    arr.push(...query.location);
+  }
+  return arr.length > 0 ? arr : [''];
+}
+
+function resolveIndustryLabel(query: z.infer<typeof searchSchema>): string {
+  const inds = resolveIndustries(query);
+  return inds.filter(Boolean).join(', ') || 'General';
+}
+
 function generateLeadFromClearbit(
   company: ClearbitCompany,
   query: z.infer<typeof searchSchema>,
@@ -289,12 +342,14 @@ function generateLeadFromClearbit(
     contactName: `${firstName} ${lastName}`,
     email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${company.domain}`,
     phone: generatePhoneForLocation(location),
+    whatsapp: generateWhatsAppForLocation(location),
     website: `https://${company.domain}`,
-    industry: query.industry || 'General',
+    industry: resolveIndustryLabel(query),
     location,
     companySize: query.companySize || pick(COMPANY_SIZES),
     title: pick(TITLES),
     linkedinUrl: `https://linkedin.com/company/${slugify(company.name)}`,
+    mapsUrl: buildMapsUrl(company.name, location),
     confidence: 'high' as const,
   };
 }
@@ -330,11 +385,16 @@ async function getIndustryCompanies(industry: string): Promise<string[]> {
   );
 }
 
-function generateFallbackLead(query: z.infer<typeof searchSchema>, companiesOverride?: string[]): Lead {
-  const companies = companiesOverride || INDUSTRIES_MAP[(query.industry || '').toLowerCase()] || INDUSTRIES_MAP.default;
+function generateFallbackLead(query: z.infer<typeof searchSchema>, companiesOverride?: string[], locationPoolOverride?: string[]): Lead {
+  const industries = resolveIndustries(query);
+  const primaryIndustry = industries[0] || '';
+  const companies = companiesOverride || INDUSTRIES_MAP[primaryIndustry.toLowerCase()] || INDUSTRIES_MAP.default;
 
-  const locationKey = (query.location || '').toLowerCase();
-  const locations = LOCATIONS_MAP[locationKey] || LOCATIONS_MAP.default;
+  const locations = locationPoolOverride || (() => {
+    const locs = resolveLocations(query);
+    const primaryLoc = locs[0] || '';
+    return LOCATIONS_MAP[primaryLoc.toLowerCase()] || LOCATIONS_MAP.default;
+  })();
 
   const firstName = pick(FIRST_NAMES);
   const lastName = pick(LAST_NAMES);
@@ -350,12 +410,14 @@ function generateFallbackLead(query: z.infer<typeof searchSchema>, companiesOver
     contactName: `${firstName} ${lastName}`,
     email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${companySlug}${domain}`,
     phone: generatePhoneForLocation(location),
+    whatsapp: generateWhatsAppForLocation(location),
     website: `https://www.${companySlug}${domain}`,
-    industry: query.industry || pick(Object.keys(INDUSTRIES_MAP).filter(k => k !== 'default')),
+    industry: resolveIndustryLabel(query) || pick(Object.keys(INDUSTRIES_MAP).filter(k => k !== 'default')),
     location,
     companySize: query.companySize || pick(COMPANY_SIZES),
     title: pick(TITLES),
     linkedinUrl: `https://linkedin.com/company/${companySlug}`,
+    mapsUrl: buildMapsUrl(companyName, location),
     confidence: 'medium' as const,
   };
 }
@@ -370,22 +432,37 @@ export async function searchLeads(userId: string, query: z.infer<typeof searchSc
     throw new Error('Insufficient tokens. Please purchase more searches.');
   }
 
-  // Build search query for Clearbit from industry + keywords
-  const searchTerms = [query.industry, query.keywords].filter(Boolean).join(' ');
-  const clearbitQuery = searchTerms || 'technology';
+  // Normalize arrays from legacy single-string or new multi-tag format
+  const industries = resolveIndustries(query);
+  const locations = resolveLocations(query);
 
-  // Determine location pool
-  const locationKey = (query.location || '').toLowerCase();
-  const locationPool = LOCATIONS_MAP[locationKey] || LOCATIONS_MAP.default;
+  // Build combined location pool from all requested locations
+  const locationPool: string[] = [];
+  for (const loc of locations) {
+    const key = loc.toLowerCase();
+    const pool = LOCATIONS_MAP[key] || LOCATIONS_MAP.default;
+    for (const l of pool) {
+      if (!locationPool.includes(l)) locationPool.push(l);
+    }
+  }
 
-  // Try Clearbit first for real company data
-  const clearbitCompanies = await fetchClearbitCompanies(clearbitQuery);
+  // Try Clearbit for each industry + keywords combination
+  const clearbitCompanies: ClearbitCompany[] = [];
+  for (const ind of industries) {
+    const searchTerms = [ind, query.keywords].filter(Boolean).join(' ');
+    const clearbitQuery = searchTerms || 'technology';
+    const companies = await fetchClearbitCompanies(clearbitQuery);
+    for (const c of companies) {
+      if (!clearbitCompanies.some(e => e.name === c.name)) {
+        clearbitCompanies.push(c);
+      }
+    }
+  }
 
   const results: Lead[] = [];
   const usedCompanies = new Set<string>();
 
   if (clearbitCompanies.length > 0) {
-    // Generate leads from real Clearbit data
     for (const company of clearbitCompanies) {
       if (usedCompanies.has(company.name)) continue;
       usedCompanies.add(company.name);
@@ -393,16 +470,22 @@ export async function searchLeads(userId: string, query: z.infer<typeof searchSc
     }
   }
 
-  // Fetch industry companies from DB or fallback
-  const industryCompanies = await getIndustryCompanies(query.industry || '');
+  // Fetch industry companies from DB or fallback — merge across all industries
+  const allIndustryCompanies: string[] = [];
+  for (const ind of industries) {
+    const companies = await getIndustryCompanies(ind);
+    for (const c of companies) {
+      if (!allIndustryCompanies.includes(c)) allIndustryCompanies.push(c);
+    }
+  }
 
   // If Clearbit returned fewer than 5, supplement with fallback generated leads
   const targetCount = 5 + Math.floor(Math.random() * 6);
   while (results.length < targetCount) {
-    let lead = generateFallbackLead(query, industryCompanies);
+    let lead = generateFallbackLead(query, allIndustryCompanies, locationPool);
     let attempts = 0;
     while (usedCompanies.has(lead.companyName) && attempts < 10) {
-      lead = generateFallbackLead(query, industryCompanies);
+      lead = generateFallbackLead(query, allIndustryCompanies, locationPool);
       attempts++;
     }
     usedCompanies.add(lead.companyName);
