@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 import { setToken, setUser } from '@/lib/auth';
 import { Loader2, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,6 +17,26 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  async function handleGoogleSuccess(credentialResponse: CredentialResponse) {
+    if (!credentialResponse.credential) {
+      setError('Google login failed: no credential');
+      return;
+    }
+    
+    setLoading(true);
+    setError('');
+    try {
+      const result = await api.auth.googleLogin(credentialResponse.credential);
+      setToken(result.token);
+      setUser(result.user);
+      router.push('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Google login failed');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -212,6 +233,28 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
+
+            <div className="mt-6">
+              <div className="relative flex items-center mb-6">
+                <div className="flex-grow border-t border-zinc-800"></div>
+                <span className="flex-shrink mx-4 text-xs font-semibold uppercase tracking-widest text-zinc-500">
+                  OR
+                </span>
+                <div className="flex-grow border-t border-zinc-800"></div>
+              </div>
+
+              <div className="flex justify-center w-full">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError('Google login failed')}
+                  theme="filled_black"
+                  shape="rectangular"
+                  width="100%"
+                  size="large"
+                  text="signin_with"
+                />
+              </div>
+            </div>
 
             <p className="mt-6 text-center text-sm text-zinc-500">
               Don&apos;t have an account?{' '}
