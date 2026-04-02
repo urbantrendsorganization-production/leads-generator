@@ -7,9 +7,9 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
-import { setToken, setUser } from '@/lib/auth';
+import { setToken, setUser, GOOGLE_CLIENT_ID } from '@/lib/auth';
 import { Loader2, ArrowRight, CheckCircle2, Gift } from 'lucide-react';
-import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
+import { GoogleLogin, CredentialResponse, GoogleOAuthProvider } from '@react-oauth/google';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -288,15 +288,17 @@ export default function RegisterPage() {
               </div>
 
               <div className="flex justify-center w-full">
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => setError('Google registration failed')}
-                  theme="filled_black"
-                  shape="rectangular"
-                  width="100%"
-                  size="large"
-                  text="signup_with"
-                />
+                <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => setError('Google registration failed')}
+                    theme="filled_black"
+                    shape="rectangular"
+                    width="350"
+                    size="large"
+                    text="signup_with"
+                  />
+                </GoogleOAuthProvider>
               </div>
             </div>
 

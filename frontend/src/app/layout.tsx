@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { Quantico, Share_Tech, Inter } from 'next/font/google';
 import './globals.css';
 import { Navbar } from '@/components/Navbar';
-import { Providers } from '@/components/Providers';
 
 // Heading Font
 const quantico = Quantico({ 
@@ -87,9 +86,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col font-sans bg-[#0d0d0d] text-white">
         <Navbar />
-        <Providers>
-          <main className="flex-1">{children}</main>
-        </Providers>
+        <main className="flex-1">{children}</main>
       </body>
     </html>
   );
