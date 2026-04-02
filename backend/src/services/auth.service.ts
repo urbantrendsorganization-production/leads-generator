@@ -2,6 +2,10 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '../utils/prisma';
 import { signToken } from '../utils/jwt';
 import { z } from 'zod';
+import { OAuth2Client } from 'google-auth-library';
+import crypto from 'crypto';
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const passwordSchema = z.string().regex(
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/,
@@ -18,6 +22,54 @@ export const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
 });
+
+export async function googleLogin(idToken: string) {
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      throw new Error('Invalid Google token');
+    }
+
+    const { email, name, sub: googleId } = payload;
+
+    let user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      // Create user if not exists
+      // Since passwordHash is required, we use a random one
+      const randomPassword = crypto.randomBytes(32).toString('hex');
+      const passwordHash = await bcrypt.hash(randomPassword, 12);
+      
+      user = await prisma.user.create({
+        data: {
+          email,
+          name: name || null,
+          passwordHash,
+          tokenBalance: 1,
+        },
+      });
+    }
+
+    const token = signToken({ userId: user.id, email: user.email, role: user.role });
+
+    return {
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        tokenBalance: user.tokenBalance,
+      },
+    };
+  } catch (error: any) {
+    throw new Error(`Google authentication failed: ${error.message}`);
+  }
+}
 
 export async function registerUser(data: z.infer<typeof registerSchema>) {
   const existing = await prisma.user.findUnique({ where: { email: data.email } });

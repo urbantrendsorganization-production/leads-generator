@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { Router, Request, Response } from 'express';
-import { registerUser, loginUser, getMe, registerSchema, loginSchema } from '../services/auth.service';
+import { registerUser, loginUser, getMe, registerSchema, loginSchema, googleLogin } from '../services/auth.service';
 import { authenticate } from '../middleware/auth';
 import { authRateLimit } from '../middleware/rateLimit';
 
@@ -31,6 +31,25 @@ authRouter.get('/csrf', (_req: Request, res: Response) => {
     path: '/',
   });
   res.json({ csrfToken });
+});
+
+authRouter.post('/google-login', authRateLimit, async (req: Request, res: Response) => {
+  console.log('Received Google Login request');
+  try {
+    const { idToken } = req.body;
+    if (!idToken) {
+      console.warn('Google Login: Missing idToken');
+      res.status(400).json({ error: 'idToken is required' });
+      return;
+    }
+    const result = await googleLogin(idToken);
+    console.log('Google Login successful for:', result.user.email);
+    setAuthCookie(res, result.token);
+    res.json(result);
+  } catch (error: any) {
+    console.error('Google Login error:', error.message);
+    res.status(401).json({ error: error.message });
+  }
 });
 
 authRouter.post('/register', authRateLimit, async (req: Request, res: Response) => {

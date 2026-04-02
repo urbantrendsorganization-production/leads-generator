@@ -33,13 +33,14 @@ app.use((req, res, next) => {
 // ─── Security headers ──────────────────────────────────────────────────────
 app.use((_req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN'); // Changed from DENY to allow same-origin iframes if needed
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.paystack.co https://autocomplete.clearbit.com; frame-src https://www.google.com"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; img-src 'self' data: https:; connect-src 'self' https://api.paystack.co https://autocomplete.clearbit.com https://accounts.google.com/gsi/ https://accounts.google.com; frame-src https://www.google.com https://accounts.google.com/gsi/"
   );
   res.removeHeader('X-Powered-By');
   next();
