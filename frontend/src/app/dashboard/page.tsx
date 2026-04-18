@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SearchForm } from '@/components/SearchForm';
 import { LeadCard } from '@/components/LeadCard';
+import { LocalSearchForm } from '@/components/LocalSearchForm';
+import { LocalLeadCard, type LocalLead } from '@/components/LocalLeadCard';
 import { TokenBadge } from '@/components/TokenBadge';
 import { PromoModal } from '@/components/PromoModal';
 import { PricingCard } from '@/components/PricingCard';
@@ -23,6 +25,8 @@ import {
   Download,
   ClockIcon,
   MapPin,
+  Building2,
+  Store,
 } from 'lucide-react';
 
 interface Lead {
@@ -78,6 +82,12 @@ function DashboardContent() {
   const [currency, setCurrency] = useState<CurrencyInfo | null>(null);
 
   const [lastSearchedLocations, setLastSearchedLocations] = useState<string[]>([]);
+
+  // ── Local business search state ──
+  const [activeTab, setActiveTab] = useState<'company' | 'local'>('company');
+  const [localResults, setLocalResults] = useState<LocalLead[]>([]);
+  const [localSearching, setLocalSearching] = useState(false);
+  const [localError, setLocalError] = useState('');
 
   const refreshUser = useCallback(async () => {
     try {
@@ -222,6 +232,27 @@ function DashboardContent() {
       }
     } finally {
       setSearching(false);
+    }
+  }
+
+  async function handleLocalSearch(query: { businessType: string; location: string; opportunityFilter: 'all' | 'no-website' | 'no-or-social' }) {
+    setLocalSearching(true);
+    setLocalError('');
+    setLocalResults([]);
+    try {
+      const result = await api.leads.localSearch(query);
+      setLocalResults(result.leads);
+      setUserState((prev: any) => prev ? { ...prev, tokenBalance: result.remainingTokens } : prev);
+      setUser({ ...user, tokenBalance: result.remainingTokens });
+    } catch (err: any) {
+      if (err instanceof ApiError && err.status === 402) {
+        setLocalError('You have no tokens left. Purchase more to continue searching.');
+        setShowBuyTokens(true);
+      } else {
+        setLocalError(err.message || 'Local search failed');
+      }
+    } finally {
+      setLocalSearching(false);
     }
   }
 
@@ -450,15 +481,59 @@ function DashboardContent() {
         {/* Promo Code */}
         <PromoModal onSuccess={handlePromoSuccess} />
 
-        {/* Search */}
-        <SearchForm
-          onSearch={handleSearch}
-          loading={searching}
-          disabled={user.tokenBalance <= 0}
-        />
+        {/* Search mode tabs */}
+        <div
+          className="flex rounded-xl p-1 gap-1"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          <button
+            type="button"
+            onClick={() => setActiveTab('company')}
+            className="flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all"
+            style={
+              activeTab === 'company'
+                ? { background: 'rgba(255,184,0,0.15)', border: '1px solid rgba(255,184,0,0.3)', color: '#FFB800' }
+                : { color: '#64748b', border: '1px solid transparent' }
+            }
+          >
+            <Building2 className="h-4 w-4" />
+            Company Leads
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('local')}
+            className="flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all"
+            style={
+              activeTab === 'local'
+                ? { background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#10b981' }
+                : { color: '#64748b', border: '1px solid transparent' }
+            }
+          >
+            <Store className="h-4 w-4" />
+            Local Business (Google Maps)
+          </button>
+        </div>
+
+        {/* Company lead search */}
+        {activeTab === 'company' && (
+          <SearchForm
+            onSearch={handleSearch}
+            loading={searching}
+            disabled={user.tokenBalance <= 0}
+          />
+        )}
+
+        {/* Local business search */}
+        {activeTab === 'local' && (
+          <LocalSearchForm
+            onSearch={handleLocalSearch}
+            loading={localSearching}
+            disabled={user.tokenBalance <= 0}
+          />
+        )}
 
         {/* Search Error */}
-        {searchError && (
+        {searchError && activeTab === 'company' && (
           <div
             className="rounded-xl p-4 text-sm animate-fade-in"
             style={{
@@ -553,8 +628,8 @@ function DashboardContent() {
           </div>
         )}
 
-        {/* Results */}
-        {!searching && results.length > 0 && (
+        {/* Company Results */}
+        {activeTab === 'company' && !searching && results.length > 0 && (
           <div className="space-y-4 animate-fade-in">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold flex items-center gap-2 text-white">
@@ -571,10 +646,7 @@ function DashboardContent() {
                 size="sm"
                 onClick={downloadCSV}
                 className="gap-2 transition-all"
-                style={{
-                  borderColor: 'rgba(255,184,0,0.3)',
-                  color: '#FFB800',
-                }}
+                style={{ borderColor: 'rgba(255,184,0,0.3)', color: '#FFB800' }}
               >
                 <Download className="h-4 w-4" />
                 Download CSV
@@ -586,6 +658,54 @@ function DashboardContent() {
               ))}
             </div>
           </div>
+        )}
+
+        {/* Local Business Results */}
+        {activeTab === 'local' && (
+          <>
+            {localError && (
+              <div
+                className="rounded-xl p-4 text-sm animate-fade-in"
+                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}
+              >
+                {localError}
+              </div>
+            )}
+            {localSearching && (
+              <div className="space-y-3 animate-fade-in">
+                {[0,1,2,3].map((i) => (
+                  <div key={i} className="rounded-xl p-5 space-y-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    <div className="skeleton h-4 w-48" />
+                    <div className="skeleton h-3 w-64" />
+                    <div className="skeleton h-3 w-40" />
+                  </div>
+                ))}
+              </div>
+            )}
+            {!localSearching && localResults.length > 0 && (
+              <div className="space-y-4 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold flex items-center gap-2 text-white">
+                    <span
+                      className="inline-flex items-center justify-center h-6 w-6 rounded-full text-xs font-black"
+                      style={{ background: '#10b981', color: '#000' }}
+                    >
+                      {localResults.length}
+                    </span>
+                    local businesses found
+                    <span className="text-sm font-normal" style={{ color: '#64748b' }}>
+                      — {localResults.filter(l => l.opportunity === 'high').length} with no website
+                    </span>
+                  </h2>
+                </div>
+                <div className="grid gap-3">
+                  {localResults.map((lead) => (
+                    <LocalLeadCard key={lead.placeId} lead={lead} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* History */}

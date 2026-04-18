@@ -107,6 +107,17 @@ export const api = {
         '/api/leads/whatsapp',
         { method: 'POST', body: JSON.stringify(payload) }
       ),
+    localSearchStatus: () =>
+      request<{ configured: boolean }>('/api/leads/local-search/status'),
+    localSearch: (payload: {
+      businessType: string;
+      location: string;
+      opportunityFilter?: 'all' | 'no-website' | 'no-or-social';
+    }) =>
+      request<{ leads: any[]; remainingTokens: number }>(
+        '/api/leads/local-search',
+        { method: 'POST', body: JSON.stringify(payload) }
+      ),
   },
 
   promos: {
