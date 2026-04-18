@@ -10,7 +10,7 @@ interface PricingCardProps {
   tokens: number;
   description: string;
   popular?: boolean;
-  localEquiv?: string;   // e.g. "≈ ₦16,983" — shown below USD price
+  localEquiv?: string;
   onSelect?: () => void;
   buttonText?: string;
   disabled?: boolean;
@@ -34,18 +34,18 @@ export function PricingCard({
       className={cn(
         'relative flex flex-col rounded-2xl transition-all duration-300',
         popular
-          ? 'gradient-border scale-[1.03] shadow-[0_0_40px_rgba(124,58,237,0.25)]'
-          : 'hover:-translate-y-1 hover:shadow-[0_0_24px_rgba(139,92,246,0.12)]'
+          ? 'scale-[1.03] shadow-[0_0_48px_rgba(255,184,0,0.18)]'
+          : 'hover:-translate-y-1'
       )}
       style={
         popular
           ? {
-              background: 'linear-gradient(160deg, rgba(124,58,237,0.14) 0%, rgba(6,182,212,0.1) 100%)',
-              border: 'none',
+              background: 'linear-gradient(160deg, rgba(255,184,0,0.1) 0%, rgba(245,196,0,0.06) 100%)',
+              border: '1.5px solid rgba(255,184,0,0.4)',
             }
           : {
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.07)',
             }
       }
     >
@@ -53,10 +53,10 @@ export function PricingCard({
       {popular && (
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
           <span
-            className="inline-flex items-center rounded-full px-4 py-1 text-xs font-bold text-white shadow-lg"
+            className="inline-flex items-center gap-1.5 rounded-full px-4 py-1 text-xs font-black uppercase tracking-widest text-black shadow-lg"
             style={{
-              background: 'linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%)',
-              boxShadow: '0 0 16px rgba(124,58,237,0.5)',
+              background: '#FFB800',
+              boxShadow: '0 0 20px rgba(255,184,0,0.5)',
             }}
           >
             Most Popular
@@ -67,19 +67,19 @@ export function PricingCard({
       {/* Header */}
       <div className="text-center px-7 pt-9 pb-4">
         <p
-          className="text-sm font-semibold uppercase tracking-widest mb-3"
-          style={{ color: popular ? '#c4b5fd' : '#8b9cc0' }}
+          className="text-xs font-black uppercase tracking-widest mb-3"
+          style={{ color: popular ? '#FFB800' : '#555555' }}
         >
           {name}
         </p>
         <div className="flex items-end justify-center gap-1">
-          <span className="text-lg font-medium text-slate-400">$</span>
-          <span className="text-5xl font-extrabold text-white">{price}</span>
+          <span className="text-lg font-medium" style={{ color: '#555555' }}>$</span>
+          <span className="text-5xl font-black text-white">{price}</span>
         </div>
         {localEquiv && (
-          <p className="mt-1 text-sm text-slate-500">{localEquiv}</p>
+          <p className="mt-1 text-sm" style={{ color: '#555555' }}>{localEquiv}</p>
         )}
-        <p className="mt-3 text-sm text-slate-400 leading-relaxed">{description}</p>
+        <p className="mt-3 text-sm leading-relaxed" style={{ color: '#777777' }}>{description}</p>
       </div>
 
       {/* Divider */}
@@ -88,35 +88,45 @@ export function PricingCard({
         style={{
           height: '1px',
           background: popular
-            ? 'linear-gradient(90deg, transparent, rgba(139,92,246,0.4), transparent)'
-            : 'rgba(255,255,255,0.07)',
+            ? 'linear-gradient(90deg, transparent, rgba(255,184,0,0.5), transparent)'
+            : 'rgba(255,255,255,0.06)',
         }}
       />
 
       {/* Features */}
-      <div className="flex-1 px-7 pb-2 space-y-2.5">
+      <div className="flex-1 px-7 pb-2 space-y-3">
         <Feature text={`${tokens} lead searches`} popular={popular} />
         <Feature text={`$${pricePerSearch} per search`} popular={popular} />
-        <Feature text="Detailed contact info" popular={popular} />
-        <Feature text="Export to CSV" popular={popular} />
+        <Feature text="Verified contact info" popular={popular} />
+        <Feature text="CSV export" popular={popular} />
         {tokens >= 50  && <Feature text="Priority results" popular={popular} />}
         {tokens >= 150 && <Feature text="Advanced filters" popular={popular} />}
+        {tokens >= 150 && <Feature text="Search history" popular={popular} />}
       </div>
 
       {/* CTA Button */}
-      <div className="px-7 pb-7 pt-5">
+      <div className="px-7 pb-7 pt-6">
         <Button
           className={cn(
-            'w-full font-semibold text-base border-0 transition-all duration-300',
+            'w-full font-black text-base border-0 transition-all duration-300',
             popular
-              ? 'btn-shimmer gradient-bg text-white shadow-[0_0_20px_rgba(124,58,237,0.4)] hover:shadow-[0_0_32px_rgba(124,58,237,0.6)] hover:opacity-95'
-              : 'text-slate-300 hover:text-white hover:border-purple-500/50 hover:bg-purple-500/10'
+              ? 'btn-shimmer btn-primary-hover'
+              : 'hover:border-[rgba(255,184,0,0.3)] hover:bg-[rgba(255,184,0,0.07)] hover:text-[#FFB800]'
           )}
           variant={popular ? 'default' : 'outline'}
           style={
-            !popular
-              ? { borderColor: 'rgba(139,92,246,0.25)' }
-              : undefined
+            popular
+              ? {
+                  background: '#FFB800',
+                  color: '#0a0a0a',
+                  boxShadow: '0 0 24px rgba(255,184,0,0.35)',
+                  minHeight: '48px',
+                }
+              : {
+                  borderColor: 'rgba(255,255,255,0.1)',
+                  color: '#888888',
+                  minHeight: '48px',
+                }
           }
           size="lg"
           onClick={onSelect}
@@ -133,16 +143,19 @@ function Feature({ text, popular }: { text: string; popular?: boolean }) {
   return (
     <div className="flex items-center gap-2.5 text-sm">
       <div
-        className="flex h-4.5 w-4.5 items-center justify-center rounded-full shrink-0"
+        className="flex h-5 w-5 items-center justify-center rounded-full shrink-0"
         style={{
           background: popular
-            ? 'linear-gradient(135deg, #7c3aed, #06b6d4)'
-            : 'rgba(139,92,246,0.2)',
+            ? 'rgba(255,184,0,0.15)'
+            : 'rgba(255,255,255,0.05)',
+          border: popular
+            ? '1px solid rgba(255,184,0,0.3)'
+            : '1px solid rgba(255,255,255,0.08)',
         }}
       >
-        <Check className="h-2.5 w-2.5 text-white" />
+        <Check className="h-3 w-3" style={{ color: popular ? '#FFB800' : '#555555' }} />
       </div>
-      <span className="text-slate-300">{text}</span>
+      <span style={{ color: '#aaaaaa' }}>{text}</span>
     </div>
   );
 }

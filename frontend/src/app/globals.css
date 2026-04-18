@@ -341,3 +341,33 @@ body {
   transform: scale(1.02);
   filter: brightness(1.08);
 }
+
+/* ── Scroll-triggered fade-up (used with IntersectionObserver via JS) ────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1), transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Stats section number — tabular figures ──────────────────────────────── */
+.stat-number {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ── Navbar mobile overlay — prevent body scroll ─────────────────────────── */
+.nav-mobile-open {
+  overflow: hidden;
+}
+
+/* ── Table comparison row hover ─────────────────────────────────────────── */
+.comparison-row {
+  transition: background 0.15s ease;
+}
+.comparison-row:hover {
+  background: rgba(255, 255, 255, 0.015) !important;
+}

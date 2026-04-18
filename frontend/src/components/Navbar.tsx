@@ -6,216 +6,234 @@ import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { isAuthenticated, getUser, logout } from '@/lib/auth';
 import { cn } from '@/lib/utils';
-import { Menu, X, LogOut, Settings, Coins, Sun, Moon } from 'lucide-react';
+import { Menu, X, LogOut, Settings, Coins, ChevronRight } from 'lucide-react';
 
 export function Navbar() {
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [authed, setAuthed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [dark, setDark] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     setAuthed(isAuthenticated());
     setUser(getUser());
-    const isDark = document.documentElement.classList.contains('dark') ||
-      localStorage.getItem('theme') === 'dark';
-    setDark(isDark);
-    if (isDark) document.documentElement.classList.add('dark');
   }, []);
 
-  function toggleTheme() {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle('dark', next);
-    localStorage.setItem('theme', next ? 'dark' : 'light');
-  }
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 16);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [menuOpen]);
+
+  const navLinks = [
+    { label: 'Pricing', href: '/pricing' },
+    ...(authed ? [{ label: 'Dashboard', href: '/dashboard' }] : []),
+    ...(user?.role === 'ADMIN' ? [{ label: 'Admin', href: '/admin' }] : []),
+  ];
 
   return (
-    <nav className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-xl border-border">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
+    <>
+      <nav
+        className="sticky top-0 z-50 transition-all duration-300"
+        style={{
+          background: scrolled
+            ? 'rgba(13,13,13,0.92)'
+            : 'rgba(13,13,13,0.6)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: scrolled
+            ? '1px solid rgba(255,255,255,0.08)'
+            : '1px solid transparent',
+        }}
+      >
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
 
-          {/* Logo Section */}
-          <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2 group min-w-0">
-              <img
-                src="https://res.cloudinary.com/dvifkm1ex/image/upload/v1774512463/t_x4jvlv.png"
-                alt="Logo"
-                className="h-8 w-8 object-contain shrink-0 transition-transform group-hover:scale-105"
-              />
-              <span className="text-lg sm:text-xl font-black tracking-tight text-foreground truncate">
-                TRENDYY <span style={{ color: '#FFB800' }}>LEADS</span>
-              </span>
-            </Link>
-
-            {/* Desktop Nav Links */}
-            <div className="hidden md:flex items-center gap-1">
-              <Link href="/pricing">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    'font-semibold',
-                    pathname === '/pricing' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
-                  )}
+            {/* Logo */}
+            <div className="flex items-center gap-8">
+              <Link href="/" className="flex items-center gap-2.5 group shrink-0">
+                <div
+                  className="flex h-8 w-8 items-center justify-center rounded-lg shadow-lg transition-all duration-300 group-hover:shadow-[0_0_16px_rgba(255,184,0,0.4)]"
+                  style={{ background: '#FFB800' }}
                 >
-                  Pricing
-                </Button>
+                  <img
+                    src="https://res.cloudinary.com/dvifkm1ex/image/upload/v1774512463/t_x4jvlv.png"
+                    alt="Logo"
+                    className="h-5 w-5 object-contain"
+                  />
+                </div>
+                <span className="text-lg font-black tracking-tight text-white">
+                  TRENDYY <span style={{ color: '#FFB800' }}>LEADS</span>
+                </span>
               </Link>
-              {authed && (
-                <Link href="/dashboard">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      'font-semibold',
-                      pathname === '/dashboard' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
-                    )}
+
+              {/* Desktop nav links */}
+              <div className="hidden md:flex items-center gap-1">
+                {navLinks.map(link => (
+                  <Link key={link.href} href={link.href}>
+                    <button
+                      className={cn(
+                        'px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200',
+                        pathname === link.href
+                          ? 'text-white bg-white/08'
+                          : 'text-[#777777] hover:text-white hover:bg-white/05'
+                      )}
+                      style={pathname === link.href ? { background: 'rgba(255,255,255,0.07)' } : undefined}
+                    >
+                      {link.label}
+                    </button>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Right actions */}
+            <div className="flex items-center gap-3">
+              {authed ? (
+                <div className="hidden md:flex items-center gap-3">
+                  {/* Token balance */}
+                  <div
+                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-black"
+                    style={{
+                      background: 'rgba(255,184,0,0.1)',
+                      border: '1px solid rgba(255,184,0,0.25)',
+                      color: '#FFB800',
+                    }}
                   >
-                    Dashboard
-                  </Button>
-                </Link>
-              )}
-              {user?.role === 'ADMIN' && (
-                <Link href="/admin">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      'font-semibold',
-                      pathname === '/admin' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
-                    )}
+                    <Coins className="h-3.5 w-3.5" />
+                    {user?.tokenBalance ?? 0}
+                  </div>
+                  <button
+                    onClick={logout}
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-all duration-200"
+                    style={{ color: '#555555' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#ef4444'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#555555'; }}
                   >
-                    <Settings className="h-4 w-4 mr-1" />
-                    Admin
-                  </Button>
-                </Link>
+                    <LogOut className="h-4 w-4" />
+                    Sign out
+                  </button>
+                </div>
+              ) : (
+                <div className="hidden md:flex items-center gap-2">
+                  <Link href="/login">
+                    <button
+                      className="px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200"
+                      style={{ color: '#777777' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#ffffff'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#777777'; }}
+                    >
+                      Log in
+                    </button>
+                  </Link>
+                  <Link href="/register">
+                    <button
+                      className="btn-primary-hover inline-flex items-center gap-1.5 px-4 py-2 text-sm font-black rounded-lg transition-all duration-200"
+                      style={{
+                        background: '#FFB800',
+                        color: '#0a0a0a',
+                        boxShadow: '0 0 20px rgba(255,184,0,0.25)',
+                      }}
+                    >
+                      Get Started
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </Link>
+                </div>
               )}
+
+              {/* Mobile menu trigger */}
+              <button
+                className="md:hidden flex items-center justify-center h-9 w-9 rounded-lg transition-all duration-200"
+                style={{ color: '#777777', background: menuOpen ? 'rgba(255,255,255,0.07)' : 'transparent' }}
+                onClick={() => setMenuOpen(!menuOpen)}
+                aria-label="Toggle menu"
+              >
+                {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
             </div>
           </div>
+        </div>
+      </nav>
 
-          {/* Right-side Actions */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={toggleTheme}
-              className="rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            >
-              {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </button>
+      {/* Mobile menu — full-screen overlay */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-40 md:hidden flex flex-col"
+          style={{ background: 'rgba(13,13,13,0.97)', top: '64px' }}
+        >
+          <div className="flex flex-col p-6 gap-1">
+            {navLinks.map(link => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center justify-between rounded-xl px-4 py-4 text-base font-semibold transition-all duration-200"
+                style={{
+                  color: pathname === link.href ? '#FFB800' : '#888888',
+                  background: pathname === link.href ? 'rgba(255,184,0,0.07)' : 'transparent',
+                  borderBottom: '1px solid rgba(255,255,255,0.04)',
+                }}
+              >
+                {link.label}
+                <ChevronRight className="h-4 w-4 opacity-40" />
+              </Link>
+            ))}
+          </div>
 
+          {/* Mobile auth actions */}
+          <div className="mt-auto p-6 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
             {authed ? (
-              <div className="hidden md:flex items-center gap-3">
+              <div className="space-y-3">
                 <div
-                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold"
-                  style={{
-                    background: 'rgba(255,184,0,0.1)',
-                    border: '1px solid rgba(255,184,0,0.3)',
-                    color: '#FFB800',
-                  }}
+                  className="flex items-center justify-between rounded-xl px-4 py-3"
+                  style={{ background: 'rgba(255,184,0,0.08)', border: '1px solid rgba(255,184,0,0.2)' }}
                 >
-                  <Coins className="h-3.5 w-3.5" />
-                  {user?.tokenBalance ?? 0}
+                  <span className="text-sm font-bold" style={{ color: '#FFB800' }}>Token Balance</span>
+                  <span className="inline-flex items-center gap-1.5 font-black text-sm" style={{ color: '#FFB800' }}>
+                    <Coins className="h-4 w-4" />
+                    {user?.tokenBalance ?? 0} tokens
+                  </span>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={logout}
-                  className="text-muted-foreground hover:text-destructive"
+                <button
+                  onClick={() => { logout(); setMenuOpen(false); }}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200"
+                  style={{ color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
                 >
                   <LogOut className="h-4 w-4" />
-                </Button>
+                  Sign out
+                </button>
               </div>
             ) : (
-              <div className="hidden md:flex items-center gap-2">
-                <Link href="/login">
-                  <Button variant="ghost" size="sm" className="font-semibold">
+              <div className="grid grid-cols-2 gap-3">
+                <Link href="/login" onClick={() => setMenuOpen(false)}>
+                  <button
+                    className="w-full rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-200"
+                    style={{ color: '#888888', border: '1px solid rgba(255,255,255,0.08)', background: 'transparent' }}
+                  >
                     Log in
-                  </Button>
+                  </button>
                 </Link>
-                <Link href="/register">
-                  <Button
-                    size="sm"
-                    className="font-black shadow-md hover:opacity-90 transition-all"
+                <Link href="/register" onClick={() => setMenuOpen(false)}>
+                  <button
+                    className="w-full rounded-xl px-4 py-3.5 text-sm font-black transition-all duration-200"
                     style={{ background: '#FFB800', color: '#0a0a0a' }}
                   >
-                    Get Started
-                  </Button>
+                    Join Free
+                  </button>
                 </Link>
               </div>
             )}
-
-            <button
-              className="md:hidden rounded-lg p-2 text-muted-foreground"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
           </div>
         </div>
-      </div>
-
-      {/* Mobile Menu */}
-      {menuOpen && (
-        <div className="md:hidden border-t p-4 space-y-1 bg-background animate-fade-in">
-          <Link href="/pricing" onClick={() => setMenuOpen(false)}>
-            <Button variant="ghost" className="w-full justify-start font-semibold" style={{ minHeight: '44px' }}>
-              Pricing
-            </Button>
-          </Link>
-          {authed && (
-            <Link href="/dashboard" onClick={() => setMenuOpen(false)}>
-              <Button
-                variant="ghost"
-                className="w-full justify-start font-semibold"
-                style={{ minHeight: '44px' }}
-              >
-                Dashboard
-              </Button>
-            </Link>
-          )}
-          {user?.role === 'ADMIN' && (
-            <Link href="/admin" onClick={() => setMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start font-semibold" style={{ minHeight: '44px' }}>
-                <Settings className="h-4 w-4 mr-2" />
-                Admin
-              </Button>
-            </Link>
-          )}
-          {authed ? (
-            <div className="pt-2 border-t mt-2">
-              <div className="flex items-center justify-between px-3 py-2">
-                <span
-                  className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold"
-                  style={{
-                    background: 'rgba(255,184,0,0.12)',
-                    border: '1px solid rgba(255,184,0,0.3)',
-                    color: '#FFB800',
-                  }}
-                >
-                  <Coins className="h-4 w-4" />
-                  {user?.tokenBalance ?? 0} tokens
-                </span>
-                <Button variant="ghost" size="sm" onClick={logout} className="text-muted-foreground hover:text-destructive">
-                  <LogOut className="h-4 w-4 mr-1" />
-                  Sign out
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t">
-              <Link href="/login" className="w-full">
-                <Button variant="outline" className="w-full font-semibold" style={{ minHeight: '44px' }}>Log in</Button>
-              </Link>
-              <Link href="/register" className="w-full">
-                <Button className="w-full font-black" style={{ background: '#FFB800', color: '#0a0a0a', minHeight: '44px' }}>
-                  Join Free
-                </Button>
-              </Link>
-            </div>
-          )}
-        </div>
       )}
-    </nav>
+    </>
   );
 }
