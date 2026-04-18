@@ -94,6 +94,19 @@ export const api = {
         { method: 'POST', body: JSON.stringify(query) }
       ),
     history: () => request<any[]>('/api/leads/history'),
+    whatsappStatus: () =>
+      request<{ configured: boolean }>('/api/leads/whatsapp/status'),
+    sendWhatsApp: (payload: {
+      to: string;
+      message?: string;
+      templateName?: string;
+      useTemplate?: boolean;
+      languageCode?: string;
+    }) =>
+      request<{ success: boolean; messageId?: string }>(
+        '/api/leads/whatsapp',
+        { method: 'POST', body: JSON.stringify(payload) }
+      ),
   },
 
   promos: {

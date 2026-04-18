@@ -17,6 +17,7 @@ interface SearchFormProps {
 }
 
 const INDUSTRIES = [
+  // Core
   'Technology',
   'Healthcare',
   'Finance',
@@ -29,6 +30,22 @@ const INDUSTRIES = [
   'Legal',
   'Retail',
   'Logistics',
+  // Expanded
+  'Agriculture',
+  'Automotive',
+  'Construction',
+  'Cybersecurity',
+  'Energy & Utilities',
+  'Entertainment & Media',
+  'Environmental & Green Tech',
+  'Food & Beverage',
+  'Gaming',
+  'Hospitality & Tourism',
+  'Insurance',
+  'Media & Publishing',
+  'Pharmaceuticals',
+  'Recruitment & HR',
+  'Telecommunications',
 ];
 
 const COMPANY_SIZES = [
@@ -57,9 +74,12 @@ const LOCATION_GROUPS: LocationGroup[] = [
       { label: 'Kampala', value: 'kampala' },
       { label: 'Dar es Salaam', value: 'dar es salaam' },
       { label: 'Kigali', value: 'kigali' },
+      { label: 'Addis Ababa', value: 'addis ababa' },
       { label: 'Johannesburg', value: 'johannesburg' },
       { label: 'Cape Town', value: 'cape town' },
       { label: 'Durban', value: 'durban' },
+      { label: 'Lusaka', value: 'lusaka' },
+      { label: 'Harare', value: 'harare' },
       { label: 'Cairo', value: 'cairo' },
       { label: 'Casablanca', value: 'casablanca' },
       { label: 'Tunis', value: 'tunis' },
@@ -76,6 +96,18 @@ const LOCATION_GROUPS: LocationGroup[] = [
       { label: 'Dublin', value: 'dublin' },
       { label: 'Zurich', value: 'zurich' },
       { label: 'Stockholm', value: 'stockholm' },
+      { label: 'Madrid', value: 'madrid' },
+      { label: 'Barcelona', value: 'barcelona' },
+      { label: 'Rome', value: 'rome' },
+      { label: 'Milan', value: 'milan' },
+      { label: 'Lisbon', value: 'lisbon' },
+      { label: 'Vienna', value: 'vienna' },
+      { label: 'Brussels', value: 'brussels' },
+      { label: 'Copenhagen', value: 'copenhagen' },
+      { label: 'Oslo', value: 'oslo' },
+      { label: 'Helsinki', value: 'helsinki' },
+      { label: 'Warsaw', value: 'warsaw' },
+      { label: 'Istanbul', value: 'istanbul' },
     ],
   },
   {
@@ -86,6 +118,8 @@ const LOCATION_GROUPS: LocationGroup[] = [
       { label: 'Abu Dhabi', value: 'abu dhabi' },
       { label: 'Doha', value: 'doha' },
       { label: 'Kuwait City', value: 'kuwait city' },
+      { label: 'Muscat', value: 'muscat' },
+      { label: 'Manama', value: 'manama' },
     ],
   },
   {
@@ -99,6 +133,11 @@ const LOCATION_GROUPS: LocationGroup[] = [
       { label: 'Hong Kong', value: 'hong kong' },
       { label: 'Kuala Lumpur', value: 'kuala lumpur' },
       { label: 'Bangkok', value: 'bangkok' },
+      { label: 'Jakarta', value: 'jakarta' },
+      { label: 'Manila', value: 'manila' },
+      { label: 'Ho Chi Minh City', value: 'ho chi minh city' },
+      { label: 'Hanoi', value: 'hanoi' },
+      { label: 'Karachi', value: 'karachi' },
     ],
   },
   {
@@ -115,14 +154,25 @@ const LOCATION_GROUPS: LocationGroup[] = [
     cities: [
       { label: 'New York', value: 'new york' },
       { label: 'San Francisco', value: 'san francisco' },
+      { label: 'Los Angeles', value: 'los angeles' },
       { label: 'Chicago', value: 'chicago' },
+      { label: 'Houston', value: 'houston' },
+      { label: 'Boston', value: 'boston' },
+      { label: 'Seattle', value: 'seattle' },
+      { label: 'Denver', value: 'denver' },
+      { label: 'Atlanta', value: 'atlanta' },
       { label: 'Miami', value: 'miami' },
       { label: 'Austin', value: 'austin' },
+      { label: 'San Diego', value: 'san diego' },
       { label: 'Toronto', value: 'toronto' },
+      { label: 'Vancouver', value: 'vancouver' },
+      { label: 'Montreal', value: 'montreal' },
       { label: 'Sao Paulo', value: 'sao paulo' },
       { label: 'Mexico City', value: 'mexico city' },
       { label: 'Bogota', value: 'bogota' },
       { label: 'Buenos Aires', value: 'buenos aires' },
+      { label: 'Lima', value: 'lima' },
+      { label: 'Santiago', value: 'santiago' },
     ],
   },
 ];
@@ -320,7 +370,9 @@ export function SearchForm({ onSearch, loading, disabled }: SearchFormProps) {
         </div>
         <div>
           <h2 className="text-base font-semibold">Search Leads</h2>
-          <p className="text-xs text-muted-foreground">Filter by industry, location, size, or keywords</p>
+          <p className="text-xs text-muted-foreground">
+            Filter by industry, location, size, or keywords &mdash; type any category to search globally
+          </p>
         </div>
       </div>
 
@@ -336,7 +388,7 @@ export function SearchForm({ onSearch, loading, disabled }: SearchFormProps) {
               tags={industries}
               setTags={setIndustries}
               options={industryOptions}
-              placeholder="Select or type industry..."
+              placeholder="Any industry — pick from list or type custom..."
             />
           </div>
 
@@ -350,7 +402,7 @@ export function SearchForm({ onSearch, loading, disabled }: SearchFormProps) {
               tags={locations}
               setTags={setLocations}
               options={ALL_LOCATIONS}
-              placeholder="Select or type location..."
+              placeholder="Any city — pick from list or type custom..."
               grouped
             />
           </div>

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Building2, User, Mail, Phone, Globe, MapPin, Users, ExternalLink, Copy, Check, Lock, Map } from 'lucide-react';
+import { Building2, User, Mail, Phone, Globe, MapPin, Users, ExternalLink, Copy, Check, Lock, Map, Send, X, Loader2 } from 'lucide-react';
+import { api } from '@/lib/api';
 
 interface Lead {
   companyName: string;
@@ -84,8 +85,125 @@ function WhatsAppIcon({ className, style }: { className?: string; style?: React.
   );
 }
 
+// ─── WhatsApp outreach modal ───────────────────────────────────────────────────
+function WhatsAppModal({
+  whatsapp,
+  companyName,
+  contactName,
+  onClose,
+}: {
+  whatsapp: string;
+  companyName: string;
+  contactName: string;
+  onClose: () => void;
+}) {
+  const [message, setMessage] = useState(
+    `Hi ${contactName.split(' ')[0]}, I came across ${companyName} and would love to explore how we can work together. Would you be open to a quick chat?`
+  );
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSend() {
+    if (!message.trim()) return;
+    setSending(true);
+    setError('');
+    try {
+      await api.leads.sendWhatsApp({ to: whatsapp, message: message.trim() });
+      setSent(true);
+    } catch (err: any) {
+      setError(err.message || 'Failed to send message.');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl p-6 space-y-4"
+        style={{ background: '#111', border: '1px solid rgba(37,211,102,0.3)' }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <WhatsAppIcon className="h-5 w-5" style={{ color: '#25d366' }} />
+            <span className="font-semibold text-white">WhatsApp Outreach</span>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 transition-colors hover:bg-white/10"
+            style={{ color: '#8b9cc0' }}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="text-xs" style={{ color: '#8b9cc0' }}>
+          Sending to: <span className="text-white font-mono">{whatsapp}</span>
+          <span className="ml-2" style={{ color: '#f59e0b' }}>
+            (requires WhatsApp Cloud API to be configured)
+          </span>
+        </div>
+
+        {sent ? (
+          <div
+            className="rounded-xl p-4 flex items-center gap-3"
+            style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)' }}
+          >
+            <Check className="h-5 w-5 text-emerald-400 shrink-0" />
+            <p className="text-sm text-emerald-300">Message sent successfully!</p>
+          </div>
+        ) : (
+          <>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={5}
+              className="w-full rounded-xl px-3 py-2 text-sm text-white resize-none outline-none focus:ring-1"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+              placeholder="Type your outreach message..."
+            />
+            {error && (
+              <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>
+            )}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition-colors hover:bg-white/5"
+                style={{ border: '1px solid rgba(255,255,255,0.1)', color: '#8b9cc0' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSend}
+                disabled={sending || !message.trim()}
+                className="flex-1 rounded-xl py-2.5 text-sm font-semibold flex items-center justify-center gap-2 transition-opacity disabled:opacity-50"
+                style={{ background: '#25d366', color: '#000' }}
+              >
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {sending ? 'Sending...' : 'Send Message'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function LeadCard({ lead, isPremium = false }: { lead: Lead; isPremium?: boolean }) {
   const [copied, setCopied] = useState(false);
+  const [showWAModal, setShowWAModal] = useState(false);
   const confidence = lead.confidence || 'medium';
   const isVerified = confidence === 'high';
 
@@ -103,6 +221,15 @@ export function LeadCard({ lead, isPremium = false }: { lead: Lead; isPremium?: 
   }
 
   return (
+    <>
+    {showWAModal && lead.whatsapp && (
+      <WhatsAppModal
+        whatsapp={lead.whatsapp}
+        companyName={lead.companyName}
+        contactName={lead.contactName}
+        onClose={() => setShowWAModal(false)}
+      />
+    )}
     <div
       className="rounded-xl card-hover-lift"
       style={{
@@ -257,18 +384,34 @@ export function LeadCard({ lead, isPremium = false }: { lead: Lead; isPremium?: 
           </div>
 
           {/* WhatsApp row */}
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm flex-wrap">
             <WhatsAppIcon className="h-3.5 w-3.5 shrink-0" style={{ color: '#25d366' }} />
             {isPremium && lead.whatsapp ? (
-              <a
-                href={`https://wa.me/${lead.whatsapp.replace(/[^0-9+]/g, '').replace('+', '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:underline"
-                style={{ color: '#25d366' }}
-              >
-                {lead.whatsapp}
-              </a>
+              <>
+                <a
+                  href={`https://wa.me/${lead.whatsapp.replace(/[^0-9+]/g, '').replace('+', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline"
+                  style={{ color: '#25d366' }}
+                >
+                  {lead.whatsapp}
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setShowWAModal(true)}
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-opacity hover:opacity-80"
+                  style={{
+                    background: 'rgba(37,211,102,0.12)',
+                    border: '1px solid rgba(37,211,102,0.3)',
+                    color: '#25d366',
+                  }}
+                  title="Send WhatsApp outreach message"
+                >
+                  <Send className="h-2.5 w-2.5" />
+                  Send
+                </button>
+              </>
             ) : (
               <div className="flex items-center gap-2">
                 <span
@@ -302,5 +445,6 @@ export function LeadCard({ lead, isPremium = false }: { lead: Lead; isPremium?: 
         </div>
       </div>
     </div>
+    </>
   );
 }
