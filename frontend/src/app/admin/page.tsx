@@ -12,11 +12,8 @@ import {
   Loader2,
   Users,
   BarChart3,
-  Tag,
-  DollarSign,
   Search,
   Plus,
-  Power,
   Database,
   Shield,
   Pencil,
@@ -27,7 +24,7 @@ import {
   Copy,
 } from 'lucide-react';
 
-type Tab = 'analytics' | 'users' | 'promos' | 'pricing' | 'lead-data' | 'audit-log';
+type Tab = 'analytics' | 'users' | 'lead-data' | 'audit-log';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -37,17 +34,8 @@ export default function AdminPage() {
 
   const [analytics, setAnalytics] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
-  const [promos, setPromos] = useState<any[]>([]);
-  const [pricingTiers, setPricingTiers] = useState<any[]>([]);
   const [leadTemplates, setLeadTemplates] = useState<any[]>([]);
   const [auditEntries, setAuditEntries] = useState<any[]>([]);
-
-  // Promo creation
-  const [newCode, setNewCode] = useState('');
-  const [newTokens, setNewTokens] = useState('');
-  const [newMaxUses, setNewMaxUses] = useState('');
-  const [createError, setCreateError] = useState('');
-  const [createLoading, setCreateLoading] = useState(false);
 
   // Staff creation
   const [showAddStaff, setShowAddStaff] = useState(false);
@@ -67,14 +55,6 @@ export default function AdminPage() {
   // Delete confirmation
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
-  // Pricing editing
-  const [editingTierId, setEditingTierId] = useState<string | null>(null);
-  const [tierForm, setTierForm] = useState({ name: '', price: '', tokens: '', description: '', popular: false, active: true });
-  const [showAddTier, setShowAddTier] = useState(false);
-  const [newTierForm, setNewTierForm] = useState({ tierId: '', name: '', price: '', tokens: '', description: '', popular: false, sortOrder: '' });
-  const [tierLoading, setTierLoading] = useState(false);
-  const [tierError, setTierError] = useState('');
-
   // Lead data editing
   const [selectedIndustry, setSelectedIndustry] = useState('');
   const [companiesText, setCompaniesText] = useState('');
@@ -89,27 +69,18 @@ export default function AdminPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const [a, u, p] = await Promise.all([
+      const [a, u] = await Promise.all([
         api.admin.analytics(),
         api.admin.users(),
-        api.admin.promos(),
       ]);
       setAnalytics(a);
       setUsers(u);
-      setPromos(p);
     } catch {
       router.push('/dashboard');
     } finally {
       setLoading(false);
     }
   }, [router]);
-
-  const loadPricing = useCallback(async () => {
-    try {
-      const tiers = await api.admin.getPricing();
-      setPricingTiers(tiers);
-    } catch { /* ignore */ }
-  }, []);
 
   const loadLeadTemplates = useCallback(async () => {
     try {
@@ -140,42 +111,9 @@ export default function AdminPage() {
   }, [router, loadData]);
 
   useEffect(() => {
-    if (tab === 'pricing') loadPricing();
     if (tab === 'lead-data') loadLeadTemplates();
     if (tab === 'audit-log') loadAuditLog();
-  }, [tab, loadPricing, loadLeadTemplates, loadAuditLog]);
-
-  // ─── Promo handlers ────────────────────────────────────────────────────────
-
-  async function handleCreatePromo(e: React.FormEvent) {
-    e.preventDefault();
-    setCreateError('');
-    setCreateLoading(true);
-    try {
-      await api.admin.createPromo({
-        code: newCode.toUpperCase().trim(),
-        tokensGrant: parseInt(newTokens),
-        maxUses: newMaxUses ? parseInt(newMaxUses) : null,
-      });
-      setNewCode('');
-      setNewTokens('');
-      setNewMaxUses('');
-      const p = await api.admin.promos();
-      setPromos(p);
-    } catch (err: any) {
-      setCreateError(err.message || 'Failed to create promo code');
-    } finally {
-      setCreateLoading(false);
-    }
-  }
-
-  async function handleTogglePromo(id: string, active: boolean) {
-    try {
-      await api.admin.togglePromo(id, !active);
-      const p = await api.admin.promos();
-      setPromos(p);
-    } catch { /* silently fail */ }
-  }
+  }, [tab, loadLeadTemplates, loadAuditLog]);
 
   // ─── Staff handlers ────────────────────────────────────────────────────────
 
@@ -239,66 +177,6 @@ export default function AdminPage() {
     }
   }
 
-  // ─── Pricing handlers ──────────────────────────────────────────────────────
-
-  function startEditTier(tier: any) {
-    setEditingTierId(tier.tierId);
-    setTierForm({
-      name: tier.name,
-      price: String(tier.price),
-      tokens: String(tier.tokens),
-      description: tier.description,
-      popular: tier.popular,
-      active: tier.active !== undefined ? tier.active : true,
-    });
-  }
-
-  async function handleSaveTier() {
-    if (!editingTierId) return;
-    setTierLoading(true);
-    setTierError('');
-    try {
-      await api.admin.updatePricing(editingTierId, {
-        name: tierForm.name,
-        price: parseFloat(tierForm.price),
-        tokens: parseInt(tierForm.tokens),
-        description: tierForm.description,
-        popular: tierForm.popular,
-        active: tierForm.active,
-      });
-      setEditingTierId(null);
-      await loadPricing();
-    } catch (err: any) {
-      setTierError(err.message || 'Failed to update tier');
-    } finally {
-      setTierLoading(false);
-    }
-  }
-
-  async function handleCreateTier(e: React.FormEvent) {
-    e.preventDefault();
-    setTierLoading(true);
-    setTierError('');
-    try {
-      await api.admin.createPricing({
-        tierId: newTierForm.tierId,
-        name: newTierForm.name,
-        price: parseFloat(newTierForm.price),
-        tokens: parseInt(newTierForm.tokens),
-        description: newTierForm.description,
-        popular: newTierForm.popular,
-        sortOrder: newTierForm.sortOrder ? parseInt(newTierForm.sortOrder) : 0,
-      });
-      setShowAddTier(false);
-      setNewTierForm({ tierId: '', name: '', price: '', tokens: '', description: '', popular: false, sortOrder: '' });
-      await loadPricing();
-    } catch (err: any) {
-      setTierError(err.message || 'Failed to create tier');
-    } finally {
-      setTierLoading(false);
-    }
-  }
-
   // ─── Lead data handlers ────────────────────────────────────────────────────
 
   function handleSelectIndustry(industry: string) {
@@ -342,7 +220,7 @@ export default function AdminPage() {
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Admin Panel</h1>
-        <p className="text-muted-foreground">Manage users, promos, pricing, and more</p>
+        <p className="text-muted-foreground">Manage users, lead data, and more</p>
       </div>
 
       {/* Temp password modal */}
@@ -378,8 +256,6 @@ export default function AdminPage() {
         {([
           { id: 'analytics' as const, label: 'Analytics', icon: BarChart3 },
           { id: 'users' as const, label: 'Users', icon: Users },
-          { id: 'promos' as const, label: 'Promo Codes', icon: Tag },
-          { id: 'pricing' as const, label: 'Pricing', icon: DollarSign },
           { id: 'lead-data' as const, label: 'Lead Data', icon: Database },
           { id: 'audit-log' as const, label: 'Audit Log', icon: Shield },
         ] as const).map((t) => (
@@ -399,12 +275,11 @@ export default function AdminPage() {
       {/* ════════════════════ Analytics Tab ════════════════════ */}
       {tab === 'analytics' && analytics && (
         <div className="space-y-6 animate-fade-in">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[
               { label: 'Total Users', value: analytics.totalUsers, icon: Users },
               { label: 'Total Searches', value: analytics.totalSearches, icon: Search },
               { label: 'Searches (24h)', value: analytics.searchesLast24h, icon: BarChart3 },
-              { label: 'Revenue', value: `$${analytics.totalRevenue.toFixed(2)}`, icon: DollarSign },
             ].map((stat) => (
               <Card key={stat.label}>
                 <CardContent className="p-5">
@@ -625,304 +500,6 @@ export default function AdminPage() {
                                   Cancel
                                 </Button>
                               </div>
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* ════════════════════ Promos Tab ════════════════════ */}
-      {tab === 'promos' && (
-        <div className="space-y-6 animate-fade-in">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Plus className="h-5 w-5" />
-                Create Promo Code
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleCreatePromo} className="flex flex-col sm:flex-row gap-3">
-                <Input
-                  placeholder="CODE"
-                  value={newCode}
-                  onChange={(e) => setNewCode(e.target.value.toUpperCase())}
-                  className="uppercase sm:w-40"
-                  required
-                />
-                <Input
-                  placeholder="Tokens to grant"
-                  type="number"
-                  min="1"
-                  value={newTokens}
-                  onChange={(e) => setNewTokens(e.target.value)}
-                  className="sm:w-40"
-                  required
-                />
-                <Input
-                  placeholder="Max uses (blank = unlimited)"
-                  type="number"
-                  min="1"
-                  value={newMaxUses}
-                  onChange={(e) => setNewMaxUses(e.target.value)}
-                  className="sm:w-52"
-                />
-                <Button type="submit" disabled={createLoading}>
-                  {createLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create'}
-                </Button>
-              </form>
-              {createError && (
-                <p className="mt-2 text-sm text-destructive">{createError}</p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Promo Codes ({promos.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left text-muted-foreground">
-                      <th className="pb-3 pr-4 font-medium">Code</th>
-                      <th className="pb-3 pr-4 font-medium">Tokens</th>
-                      <th className="pb-3 pr-4 font-medium">Uses</th>
-                      <th className="pb-3 pr-4 font-medium">Max Uses</th>
-                      <th className="pb-3 pr-4 font-medium">Status</th>
-                      <th className="pb-3 font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {promos.map((p) => (
-                      <tr key={p.id} className="border-b border-border/50">
-                        <td className="py-3 pr-4 font-mono font-medium">{p.code}</td>
-                        <td className="py-3 pr-4">{p.tokensGrant}</td>
-                        <td className="py-3 pr-4">{p.uses}</td>
-                        <td className="py-3 pr-4">{p.maxUses ?? 'Unlimited'}</td>
-                        <td className="py-3 pr-4">
-                          <Badge variant={p.active ? 'default' : 'destructive'}>
-                            {p.active ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </td>
-                        <td className="py-3">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleTogglePromo(p.id, p.active)}
-                          >
-                            <Power className="h-4 w-4" />
-                            {p.active ? 'Deactivate' : 'Activate'}
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* ════════════════════ Pricing Tab ════════════════════ */}
-      {tab === 'pricing' && (
-        <div className="space-y-4 animate-fade-in">
-          {!showAddTier ? (
-            <Button onClick={() => setShowAddTier(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Tier
-            </Button>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Create Pricing Tier</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleCreateTier} className="space-y-3">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    <Input
-                      placeholder="Tier ID (e.g. enterprise)"
-                      value={newTierForm.tierId}
-                      onChange={(e) => setNewTierForm({ ...newTierForm, tierId: e.target.value })}
-                      required
-                    />
-                    <Input
-                      placeholder="Name"
-                      value={newTierForm.name}
-                      onChange={(e) => setNewTierForm({ ...newTierForm, name: e.target.value })}
-                      required
-                    />
-                    <Input
-                      placeholder="Price (USD)"
-                      type="number"
-                      step="0.01"
-                      value={newTierForm.price}
-                      onChange={(e) => setNewTierForm({ ...newTierForm, price: e.target.value })}
-                      required
-                    />
-                    <Input
-                      placeholder="Tokens"
-                      type="number"
-                      value={newTierForm.tokens}
-                      onChange={(e) => setNewTierForm({ ...newTierForm, tokens: e.target.value })}
-                      required
-                    />
-                    <Input
-                      placeholder="Description"
-                      value={newTierForm.description}
-                      onChange={(e) => setNewTierForm({ ...newTierForm, description: e.target.value })}
-                      required
-                    />
-                    <Input
-                      placeholder="Sort order"
-                      type="number"
-                      value={newTierForm.sortOrder}
-                      onChange={(e) => setNewTierForm({ ...newTierForm, sortOrder: e.target.value })}
-                    />
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={newTierForm.popular}
-                        onChange={(e) => setNewTierForm({ ...newTierForm, popular: e.target.checked })}
-                        className="rounded"
-                      />
-                      Popular
-                    </label>
-                    <Button type="submit" disabled={tierLoading}>
-                      {tierLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create'}
-                    </Button>
-                    <Button type="button" variant="ghost" onClick={() => setShowAddTier(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </form>
-                {tierError && <p className="mt-2 text-sm text-destructive">{tierError}</p>}
-              </CardContent>
-            </Card>
-          )}
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Pricing Tiers ({pricingTiers.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left text-muted-foreground">
-                      <th className="pb-3 pr-4 font-medium">Tier ID</th>
-                      <th className="pb-3 pr-4 font-medium">Name</th>
-                      <th className="pb-3 pr-4 font-medium">Price</th>
-                      <th className="pb-3 pr-4 font-medium">Tokens</th>
-                      <th className="pb-3 pr-4 font-medium">Description</th>
-                      <th className="pb-3 pr-4 font-medium">Popular</th>
-                      <th className="pb-3 pr-4 font-medium">Active</th>
-                      <th className="pb-3 font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pricingTiers.map((tier) => (
-                      <React.Fragment key={tier.tierId}>
-                        <tr className="border-b border-border/50">
-                          <td className="py-3 pr-4 font-mono">{tier.tierId}</td>
-                          <td className="py-3 pr-4">{tier.name}</td>
-                          <td className="py-3 pr-4">${tier.price}</td>
-                          <td className="py-3 pr-4">{tier.tokens}</td>
-                          <td className="py-3 pr-4 max-w-48 truncate">{tier.description}</td>
-                          <td className="py-3 pr-4">
-                            <Badge variant={tier.popular ? 'default' : 'outline'}>
-                              {tier.popular ? 'Yes' : 'No'}
-                            </Badge>
-                          </td>
-                          <td className="py-3 pr-4">
-                            <Badge variant={tier.active ? 'default' : 'destructive'}>
-                              {tier.active ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </td>
-                          <td className="py-3">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => editingTierId === tier.tierId ? setEditingTierId(null) : startEditTier(tier)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                        {editingTierId === tier.tierId && (
-                          <tr className="border-b border-border/50 bg-muted/30">
-                            <td colSpan={8} className="py-3 px-4">
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                                <div>
-                                  <label className="text-xs font-medium text-muted-foreground">Name</label>
-                                  <Input
-                                    value={tierForm.name}
-                                    onChange={(e) => setTierForm({ ...tierForm, name: e.target.value })}
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-xs font-medium text-muted-foreground">Price (USD)</label>
-                                  <Input
-                                    type="number"
-                                    step="0.01"
-                                    value={tierForm.price}
-                                    onChange={(e) => setTierForm({ ...tierForm, price: e.target.value })}
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-xs font-medium text-muted-foreground">Tokens</label>
-                                  <Input
-                                    type="number"
-                                    value={tierForm.tokens}
-                                    onChange={(e) => setTierForm({ ...tierForm, tokens: e.target.value })}
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-xs font-medium text-muted-foreground">Description</label>
-                                  <Input
-                                    value={tierForm.description}
-                                    onChange={(e) => setTierForm({ ...tierForm, description: e.target.value })}
-                                  />
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                <label className="flex items-center gap-2 text-sm">
-                                  <input
-                                    type="checkbox"
-                                    checked={tierForm.popular}
-                                    onChange={(e) => setTierForm({ ...tierForm, popular: e.target.checked })}
-                                    className="rounded"
-                                  />
-                                  Popular
-                                </label>
-                                <label className="flex items-center gap-2 text-sm">
-                                  <input
-                                    type="checkbox"
-                                    checked={tierForm.active}
-                                    onChange={(e) => setTierForm({ ...tierForm, active: e.target.checked })}
-                                    className="rounded"
-                                  />
-                                  Active
-                                </label>
-                                <Button size="sm" onClick={handleSaveTier} disabled={tierLoading}>
-                                  {tierLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
-                                </Button>
-                                <Button size="sm" variant="ghost" onClick={() => setEditingTierId(null)}>
-                                  Cancel
-                                </Button>
-                              </div>
-                              {tierError && <p className="mt-2 text-sm text-destructive">{tierError}</p>}
                             </td>
                           </tr>
                         )}

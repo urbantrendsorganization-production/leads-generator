@@ -107,55 +107,25 @@ export const api = {
         '/api/leads/whatsapp',
         { method: 'POST', body: JSON.stringify(payload) }
       ),
-    localSearchStatus: () =>
-      request<{ configured: boolean }>('/api/leads/local-search/status'),
-    localSearch: (payload: {
-      businessType: string;
-      location: string;
-      opportunityFilter?: 'all' | 'no-website' | 'no-or-social';
-    }) =>
-      request<{ leads: any[]; remainingTokens: number }>(
-        '/api/leads/local-search',
-        { method: 'POST', body: JSON.stringify(payload) }
-      ),
   },
 
-  promos: {
-    redeem: (code: string) =>
-      request<{ tokensAdded: number; newBalance: number }>('/api/promos/redeem', {
+  email: {
+    status: () =>
+      request<{ configured: boolean }>('/api/email/status'),
+    send: (payload: { toEmail: string; toName: string; company: string; subject: string; body: string }) =>
+      request<{ success: boolean; sendId: string }>('/api/email/send', {
         method: 'POST',
-        body: JSON.stringify({ code }),
+        body: JSON.stringify(payload),
       }),
-  },
-
-  payments: {
-    checkout: (tierId: string) =>
-      request<{ reference: string; url: string }>('/api/payments/checkout', {
+    history: () =>
+      request<any[]>('/api/email/history'),
+    campaigns: () =>
+      request<any[]>('/api/email/campaigns'),
+    createCampaign: (data: { name: string; subject: string; body: string }) =>
+      request<any>('/api/email/campaigns', {
         method: 'POST',
-        body: JSON.stringify({
-          tierId,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        }),
+        body: JSON.stringify(data),
       }),
-    verify: (reference: string) =>
-      request<{ alreadyCredited: boolean; tokenBalance: number }>('/api/payments/verify', {
-        method: 'POST',
-        body: JSON.stringify({ reference }),
-      }),
-  },
-
-  pricing: {
-    list: () =>
-      request<
-        {
-          id: string;
-          name: string;
-          price: number;
-          tokens: number;
-          description: string;
-          popular: boolean;
-        }[]
-      >('/api/pricing'),
   },
 
   admin: {
@@ -168,23 +138,7 @@ export const api = {
       request<any>(`/api/admin/users/${id}`, { method: 'DELETE' }),
     resetPassword: (id: string) =>
       request<{ tempPassword: string }>(`/api/admin/users/${id}/reset-password`, { method: 'POST' }),
-    promos: () => request<any[]>('/api/admin/promos'),
-    createPromo: (data: { code: string; tokensGrant: number; maxUses?: number | null }) =>
-      request<any>('/api/admin/promos', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    togglePromo: (id: string, active: boolean) =>
-      request<any>(`/api/admin/promos/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ active }),
-      }),
     analytics: () => request<any>('/api/admin/analytics'),
-    getPricing: () => request<any[]>('/api/admin/pricing'),
-    updatePricing: (tierId: string, data: any) =>
-      request<any>(`/api/admin/pricing/${tierId}`, { method: 'PATCH', body: JSON.stringify(data) }),
-    createPricing: (data: any) =>
-      request<any>('/api/admin/pricing', { method: 'POST', body: JSON.stringify(data) }),
     getLeadTemplates: () => request<any[]>('/api/admin/lead-templates'),
     upsertLeadTemplate: (industry: string, companies: string[]) =>
       request<any>(`/api/admin/lead-templates/${encodeURIComponent(industry)}`, {

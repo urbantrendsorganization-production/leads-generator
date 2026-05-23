@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS "PromoRedemption";
+DROP TABLE IF EXISTS "PromoCode";
+DROP TABLE IF EXISTS "Transaction";
+DROP TABLE IF EXISTS "PricingTier";

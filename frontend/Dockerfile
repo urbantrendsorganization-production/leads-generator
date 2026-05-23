@@ -4,18 +4,20 @@ RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-# Build Arguments
+# Build-time public env vars (baked into the Next.js bundle)
 ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ARG NEXT_PUBLIC_GOOGLE_MAPS_KEY
+
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+ENV NEXT_PUBLIC_GOOGLE_MAPS_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_KEY}
 
 COPY package*.json ./
-
-# Install all deps (including devDependencies needed for the build)
 RUN npm install --include=dev
 
 COPY . .
 
-# Build Next.js with the correct API URL baked in
 RUN npm run build
 
 EXPOSE 3000

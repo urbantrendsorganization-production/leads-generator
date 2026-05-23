@@ -7,9 +7,9 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
-import { setToken, setUser, GOOGLE_CLIENT_ID } from '@/lib/auth';
+import { setToken, setUser } from '@/lib/auth';
 import { Loader2, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { GoogleLogin, CredentialResponse, GoogleOAuthProvider } from '@react-oauth/google';
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -72,7 +72,7 @@ export default function LoginPage() {
         <div
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(135deg, rgba(255,184,0,0.18) 0%, rgba(13,13,13,0.85) 60%, rgba(13,13,13,0.95) 100%)',
+            background: 'linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 18%, transparent) 0%, rgba(13,13,13,0.85) 60%, rgba(13,13,13,0.95) 100%)',
           }}
         />
         {/* Brand content */}
@@ -80,16 +80,15 @@ export default function LoginPage() {
           <div className="flex items-center gap-3">
             <div
               className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0"
-              style={{ background: '#FFB800' }}
+              style={{ background: 'var(--brand-primary)', boxShadow: '0 0 16px var(--brand-primary-glow)' }}
             >
-              <img
-                src="https://res.cloudinary.com/dvifkm1ex/image/upload/v1774512463/t_x4jvlv.png"
-                alt=""
-                className="h-5 w-5 object-contain"
-              />
+              <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5">
+                <path d="M3 14L8 7.5L12 11L17 4" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="17" cy="4" r="2" fill="white" opacity="0.9" />
+              </svg>
             </div>
             <span className="font-black text-white text-xl tracking-tight">
-              TRENDYY <span style={{ color: '#FFB800' }}>LEADS</span>
+              TRENDYY <span style={{ color: 'var(--brand-primary)' }}>LEADS</span>
             </span>
           </div>
 
@@ -108,7 +107,7 @@ export default function LoginPage() {
                 'Export to CSV in one click',
               ].map((item) => (
                 <div key={item} className="flex items-center gap-3">
-                  <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: '#FFB800' }} />
+                  <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: 'var(--brand-primary)' }} />
                   <span className="text-zinc-300 text-sm font-medium">{item}</span>
                 </div>
               ))}
@@ -129,7 +128,7 @@ export default function LoginPage() {
         {/* Subtle glow — mobile only (on large screens the brand panel covers left) */}
         <div
           className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 opacity-10 blur-3xl lg:opacity-5"
-          style={{ background: 'radial-gradient(circle, #FFB800 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle, var(--brand-primary) 0%, transparent 70%)' }}
         />
 
         <div className="relative w-full max-w-md animate-fade-in">
@@ -138,16 +137,15 @@ export default function LoginPage() {
           <div className="flex items-center justify-center gap-2 mb-8 lg:hidden">
             <div
               className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0"
-              style={{ background: '#FFB800' }}
+              style={{ background: 'var(--brand-primary)', boxShadow: '0 0 16px var(--brand-primary-glow)' }}
             >
-              <img
-                src="https://res.cloudinary.com/dvifkm1ex/image/upload/v1774512463/t_x4jvlv.png"
-                alt=""
-                className="h-5 w-5 object-contain"
-              />
+              <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5">
+                <path d="M3 14L8 7.5L12 11L17 4" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="17" cy="4" r="2" fill="white" opacity="0.9" />
+              </svg>
             </div>
             <span className="font-black text-white text-xl tracking-tight">
-              TRENDYY <span style={{ color: '#FFB800' }}>LEADS</span>
+              TRENDYY <span style={{ color: 'var(--brand-primary)' }}>LEADS</span>
             </span>
           </div>
 
@@ -155,7 +153,7 @@ export default function LoginPage() {
             className="rounded-2xl p-8"
             style={{
               background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,184,0,0.15)',
+              border: '1px solid color-mix(in srgb, var(--brand-primary) 15%, transparent)',
               backdropFilter: 'blur(16px)',
             }}
           >
@@ -178,7 +176,7 @@ export default function LoginPage() {
                   required
                   style={{
                     background: 'rgba(255,255,255,0.05)',
-                    borderColor: 'rgba(255,184,0,0.2)',
+                    borderColor: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)',
                     minHeight: '44px',
                   }}
                 />
@@ -196,7 +194,7 @@ export default function LoginPage() {
                   required
                   style={{
                     background: 'rgba(255,255,255,0.05)',
-                    borderColor: 'rgba(255,184,0,0.2)',
+                    borderColor: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)',
                     minHeight: '44px',
                   }}
                 />
@@ -218,7 +216,7 @@ export default function LoginPage() {
                 className="w-full btn-shimmer btn-primary-hover font-black border-0"
                 size="lg"
                 disabled={loading}
-                style={{ background: '#FFB800', color: '#0a0a0a', minHeight: '48px' }}
+                style={{ background: 'var(--brand-primary)', color: '#ffffff', minHeight: '48px' }}
               >
                 {loading ? (
                   <>
@@ -244,23 +242,21 @@ export default function LoginPage() {
               </div>
 
               <div className="flex justify-center w-full">
-                <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => setError('Google login failed')}
-                    theme="filled_black"
-                    shape="rectangular"
-                    width="350"
-                    size="large"
-                    text="signin_with"
-                  />
-                </GoogleOAuthProvider>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError('Google login failed')}
+                  theme="filled_black"
+                  shape="rectangular"
+                  width="350"
+                  size="large"
+                  text="signin_with"
+                />
               </div>
             </div>
 
             <p className="mt-6 text-center text-sm text-zinc-500">
               Don&apos;t have an account?{' '}
-              <Link href="/register" className="font-semibold hover:underline" style={{ color: '#FFB800' }}>
+              <Link href="/register" className="font-semibold hover:underline" style={{ color: 'var(--brand-primary)' }}>
                 Sign up free
               </Link>
             </p>

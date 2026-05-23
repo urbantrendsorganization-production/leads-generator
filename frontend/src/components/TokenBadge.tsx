@@ -27,20 +27,19 @@ export function TokenBadge({ balance, className }: TokenBadgeProps) {
             }
           : isLow
           ? {
-              background: 'rgba(245,158,11,0.12)',
-              border: '1px solid rgba(245,158,11,0.4)',
-              color: '#fbbf24',
-              boxShadow: '0 0 16px rgba(245,158,11,0.2)',
+              background: 'color-mix(in srgb, var(--brand-primary) 12%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--brand-primary) 35%, transparent)',
+              color: 'var(--brand-primary)',
+              boxShadow: '0 0 16px var(--brand-primary-glow)',
             }
           : {
-              background: 'linear-gradient(135deg,rgba(255,184,0,0.18),rgba(245,196,0,0.1))',
-              border: '1px solid rgba(255,184,0,0.45)',
-              color: '#FFB800',
-              boxShadow: '0 0 20px rgba(255,184,0,0.2)',
+              background: 'color-mix(in srgb, var(--brand-primary) 14%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--brand-primary) 40%, transparent)',
+              color: 'var(--brand-primary)',
+              boxShadow: '0 0 20px var(--brand-primary-glow)',
             }
       }
     >
-      {/* Gold coin SVG icon */}
       <svg
         width="16"
         height="16"
@@ -55,7 +54,7 @@ export function TokenBadge({ balance, className }: TokenBadgeProps) {
           r="10"
           stroke="currentColor"
           strokeWidth="1.5"
-          fill={isEmpty ? 'rgba(239,68,68,0.15)' : isLow ? 'rgba(245,158,11,0.15)' : 'rgba(255,184,0,0.2)'}
+          fill={isEmpty ? 'rgba(239,68,68,0.15)' : 'color-mix(in srgb, currentColor 15%, transparent)'}
         />
         <text
           x="12"

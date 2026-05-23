@@ -10,7 +10,15 @@ export const searchSchema = z.object({
   locations: z.array(tagItem.min(1)).max(5).optional(),
   companySize: z.string().optional(),
   keywords: z.string().optional(),
+  refineFilters: z.object({
+    titles: z.array(z.string().max(80)).max(10).optional(),
+    revenueMin: z.number().int().min(0).optional(),
+    revenueMax: z.number().int().min(0).optional(),
+    excludeCompanies: z.array(z.string().max(80)).max(20).optional(),
+  }).optional(),
 });
+
+type RefineFilters = NonNullable<z.infer<typeof searchSchema>['refineFilters']>;
 
 interface Lead {
   companyName: string;
@@ -426,6 +434,20 @@ function buildMapsUrl(companyName: string, location: string): string {
 
 const COMPANY_SIZES = ['1-10', '11-50', '51-200', '201-500', '500+'];
 
+/**
+ * Maps an annual revenue band (in currency units) to a plausible
+ * company-size bucket. Returns null when no revenue bounds are supplied.
+ */
+function revenueToCompanySize(min?: number, max?: number): string | null {
+  if (!min && !max) return null;
+  const midpoint = min != null && max != null ? (min + max) / 2 : min ?? max!;
+  if (midpoint < 1_000_000) return '1-10';
+  if (midpoint < 10_000_000) return '11-50';
+  if (midpoint < 50_000_000) return '51-200';
+  if (midpoint < 200_000_000) return '201-500';
+  return '500+';
+}
+
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -592,7 +614,8 @@ async function getIndustryCompanies(industry: string): Promise<string[]> {
 function generateFallbackLead(
   query: z.infer<typeof searchSchema>,
   companiesOverride?: string[],
-  locationPoolOverride?: string[]
+  locationPoolOverride?: string[],
+  refineFilters?: RefineFilters
 ): Lead {
   const industries = resolveIndustries(query);
   const primaryIndustry = industries[0] || '';
@@ -616,6 +639,17 @@ function generateFallbackLead(
   const domains = ['.com', '.io', '.co', '.net', '.tech'];
   const domain = pick(domains);
 
+  // Refinement: prefer caller-supplied job titles when provided.
+  const titlePool =
+    refineFilters?.titles && refineFilters.titles.length > 0 ? refineFilters.titles : TITLES;
+
+  // Refinement: derive company size from the requested revenue band when set,
+  // otherwise fall back to the explicit companySize or a random bucket.
+  const revenueCompanySize = revenueToCompanySize(
+    refineFilters?.revenueMin,
+    refineFilters?.revenueMax
+  );
+
   return {
     companyName,
     contactName: `${firstName} ${lastName}`,
@@ -625,8 +659,8 @@ function generateFallbackLead(
     website: `https://www.${companySlug}${domain}`,
     industry: resolveIndustryLabel(query) || pick(Object.keys(INDUSTRIES_MAP).filter((k) => k !== 'default')),
     location,
-    companySize: query.companySize || pick(COMPANY_SIZES),
-    title: pick(TITLES),
+    companySize: revenueCompanySize || query.companySize || pick(COMPANY_SIZES),
+    title: pick(titlePool),
     linkedinUrl: `https://linkedin.com/company/${companySlug}`,
     mapsUrl: buildMapsUrl(companyName, location),
     confidence: 'medium',
@@ -639,7 +673,7 @@ function generateFallbackLead(
 export async function searchLeads(userId: string, query: z.infer<typeof searchSchema>) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw new Error('User not found');
-  if (user.tokenBalance <= 0) throw new Error('Insufficient tokens. Please purchase more searches.');
+  if (user.tokenBalance <= 0) throw new Error('Insufficient search credits. Contact support to get more.');
 
   const industries = resolveIndustries(query);
   const locations = resolveLocations(query);
@@ -679,6 +713,12 @@ export async function searchLeads(userId: string, query: z.infer<typeof searchSc
   const results: Lead[] = [];
   const usedCompanies = new Set<string>();
 
+  // Refinement: seed excluded companies so they are never generated as leads.
+  const refineFilters = query.refineFilters;
+  for (const excluded of refineFilters?.excludeCompanies || []) {
+    usedCompanies.add(excluded);
+  }
+
   // Generate leads from Clearbit results (with optional Hunter.io enrichment)
   for (const company of clearbitCompanies) {
     if (usedCompanies.has(company.name)) continue;
@@ -699,10 +739,10 @@ export async function searchLeads(userId: string, query: z.infer<typeof searchSc
   // Fill up to 10–20 leads with generated fallback data
   const targetCount = 10 + Math.floor(Math.random() * 11); // 10–20
   while (results.length < targetCount) {
-    let lead = generateFallbackLead(query, allIndustryCompanies, locationPool);
+    let lead = generateFallbackLead(query, allIndustryCompanies, locationPool, refineFilters);
     let attempts = 0;
     while (usedCompanies.has(lead.companyName) && attempts < 10) {
-      lead = generateFallbackLead(query, allIndustryCompanies, locationPool);
+      lead = generateFallbackLead(query, allIndustryCompanies, locationPool, refineFilters);
       attempts++;
     }
     usedCompanies.add(lead.companyName);

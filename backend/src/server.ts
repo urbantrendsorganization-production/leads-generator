@@ -7,11 +7,9 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { authRouter } from './routes/auth';
 import { leadsRouter } from './routes/leads';
-import { promosRouter } from './routes/promos';
-import { paymentsRouter } from './routes/payments';
 import { adminRouter } from './routes/admin';
-import { pricingRouter } from './routes/pricing';
 import { realtimeRouter } from './routes/realtime';
+import { emailRouter } from './routes/email';
 import { sanitize } from './middleware/sanitize';
 import { csrfProtection } from './middleware/csrf';
 
@@ -40,7 +38,7 @@ app.use((_req, res, next) => {
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; img-src 'self' data: https:; connect-src 'self' https://api.paystack.co https://autocomplete.clearbit.com https://accounts.google.com/gsi/ https://accounts.google.com; frame-src https://www.google.com https://accounts.google.com/gsi/"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; img-src 'self' data: https:; connect-src 'self' https://autocomplete.clearbit.com https://accounts.google.com/gsi/ https://accounts.google.com; frame-src https://www.google.com https://accounts.google.com/gsi/"
   );
   res.removeHeader('X-Powered-By');
   next();
@@ -95,9 +93,7 @@ if (process.env.NODE_ENV === 'production') {
     // Enforce Origin header for state-changing requests
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) && !req.headers.origin) {
       // Allow Paystack/Stripe webhooks which don't send Origin headers
-      if (req.path.includes('webhook')) {
-        return next();
-      }
+      if (req.path.includes('webhook')) return next();
       return res.status(403).json({ error: 'Origin header required for this operation' });
     }
     next();
@@ -107,8 +103,6 @@ if (process.env.NODE_ENV === 'production') {
 // Cookie parser — needed for HttpOnly auth cookie and CSRF
 app.use(cookieParser());
 
-// Webhook needs raw body — must come before express.json()
-app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '50kb' }));
 
 // Input sanitization
@@ -129,11 +123,9 @@ app.get('/api/health', (_req, res) => {
 // Routes
 app.use('/api/auth', authRouter);
 app.use('/api/leads', leadsRouter);
-app.use('/api/promos', promosRouter);
-app.use('/api/payments', paymentsRouter);
 app.use('/api/admin', adminRouter);
-app.use('/api/pricing', pricingRouter);
 app.use('/api/realtime', realtimeRouter);
+app.use('/api/email', emailRouter);
 
 // Error Handling — central handler, never leaks stack traces in production
 app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {

@@ -297,7 +297,7 @@ function TagInput({
         )}
       </div>
       {tags.length >= MAX_TAGS && (
-        <p className="text-[10px] mt-1" style={{ color: '#f59e0b' }}>
+        <p className="text-[10px] mt-1" style={{ color: '#94a3b8' }}>
           Maximum {MAX_TAGS} tags reached
         </p>
       )}
@@ -416,7 +416,7 @@ export function SearchForm({ onSearch, loading, disabled }: SearchFormProps) {
               id="companySize"
               value={companySize}
               onChange={(e) => setCompanySize(e.target.value)}
-              className={`${selectClassName} font-heading uppercase tracking-wider text-xs cursor-pointer transition-all duration-200 hover:border-[#FFB800]/50 focus:ring-1 focus:ring-[#FFB800]/30 outline-none`}
+              className={`${selectClassName} font-heading uppercase tracking-wider text-xs cursor-pointer transition-all duration-200 hover:border-brand focus:ring-1 outline-none`}
               style={{
                 background: 'rgba(255,255,255,0.03)',
                 backdropFilter: 'blur(8px)',
@@ -425,7 +425,7 @@ export function SearchForm({ onSearch, loading, disabled }: SearchFormProps) {
                 padding: '0.75rem 1rem',
                 borderRadius: '8px',
                 appearance: 'none',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23FFB800'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230D9488'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'right 1rem center',
                 backgroundSize: '1em',
@@ -464,10 +464,10 @@ export function SearchForm({ onSearch, loading, disabled }: SearchFormProps) {
         {/* Submit */}
         <Button
           type="submit"
-          className="w-full btn-shimmer btn-primary-hover font-black border-0 shadow-[0_0_20px_rgba(255,184,0,0.25)]"
+          className="w-full btn-shimmer btn-primary-hover font-black border-0 glow-brand"
           size="lg"
           disabled={loading || disabled}
-          style={{ background: '#FFB800', color: '#0a0a0a', minHeight: '48px' }}
+          style={{ background: 'var(--brand-primary)', color: '#ffffff', minHeight: '48px' }}
         >
           {loading ? (
             <>

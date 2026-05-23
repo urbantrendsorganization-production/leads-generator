@@ -209,15 +209,8 @@ export async function getMe(userId: string) {
     throw new Error('User not found');
   }
 
-  // Premium check: user has any completed transaction OR tokenBalance >= 5
-  const completedTxCount = await prisma.transaction.count({
-    where: { userId, status: 'completed' },
-  });
-
-  const isPremium = completedTxCount > 0 || user.tokenBalance >= 5;
-
   return {
     ...user,
-    isPremium,
+    isPremium: user.tokenBalance >= 5,
   };
 }

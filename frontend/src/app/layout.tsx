@@ -1,26 +1,37 @@
 import type { Metadata } from 'next';
-import { Quantico, Share_Tech, Inter } from 'next/font/google';
+import { Quantico, Share_Tech, Inter, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { Navbar } from '@/components/Navbar';
+import { ThemeProvider } from '@/components/ThemeProvider';
+import { ThemeCustomizer } from '@/components/ThemeCustomizer';
+import { CookieConsent } from '@/components/CookieConsent';
+import { GoogleAuthWrapper } from '@/components/GoogleAuthWrapper';
 
 // Heading Font
-const quantico = Quantico({ 
+const quantico = Quantico({
   weight: ['400', '700'],
-  subsets: ['latin'], 
-  variable: '--font-quantico' 
+  subsets: ['latin'],
+  variable: '--font-quantico'
 });
 
 // Data/Mono Font
-const shareTech = Share_Tech({ 
+const shareTech = Share_Tech({
   weight: ['400'],
-  subsets: ['latin'], 
-  variable: '--font-share-tech' 
+  subsets: ['latin'],
+  variable: '--font-share-tech'
 });
 
 // Standard Body Font
-const inter = Inter({ 
-  subsets: ['latin'], 
-  variable: '--font-inter' 
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter'
+});
+
+// Primary Body Font (v2)
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-plus-jakarta',
+  weight: ['400', '500', '600', '700', '800'],
 });
 
 export const metadata: Metadata = {
@@ -68,25 +79,18 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${quantico.variable} ${shareTech.variable} ${inter.variable} h-full antialiased dark`}
+      className={`${quantico.variable} ${shareTech.variable} ${inter.variable} ${plusJakarta.variable} h-full antialiased dark`}
       suppressHydrationWarning
     >
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                if (localStorage.getItem('theme') === 'dark' || !('theme' in localStorage)) {
-                  document.documentElement.classList.add('dark');
-                }
-              } catch(e) {}
-            `,
-          }}
-        />
-      </head>
       <body className="min-h-full flex flex-col font-sans bg-[#0d0d0d] text-white">
-        <Navbar />
-        <main className="flex-1">{children}</main>
+        <GoogleAuthWrapper>
+          <ThemeProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <ThemeCustomizer />
+            <CookieConsent />
+          </ThemeProvider>
+        </GoogleAuthWrapper>
       </body>
     </html>
   );

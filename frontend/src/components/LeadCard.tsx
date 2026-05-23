@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Building2, User, Mail, Phone, Globe, MapPin, Users, ExternalLink, Copy, Check, Lock, Map, Send, X, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { EmailComposer } from './EmailComposer';
 
 interface Lead {
   companyName: string;
@@ -145,7 +146,7 @@ function WhatsAppModal({
 
         <div className="text-xs" style={{ color: '#8b9cc0' }}>
           Sending to: <span className="text-white font-mono">{whatsapp}</span>
-          <span className="ml-2" style={{ color: '#f59e0b' }}>
+          <span className="ml-2" style={{ color: '#94a3b8' }}>
             (requires WhatsApp Cloud API to be configured)
           </span>
         </div>
@@ -204,6 +205,7 @@ function WhatsAppModal({
 export function LeadCard({ lead, isPremium = false }: { lead: Lead; isPremium?: boolean }) {
   const [copied, setCopied] = useState(false);
   const [showWAModal, setShowWAModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
   const confidence = lead.confidence || 'medium';
   const isVerified = confidence === 'high';
 
@@ -230,13 +232,23 @@ export function LeadCard({ lead, isPremium = false }: { lead: Lead; isPremium?: 
         onClose={() => setShowWAModal(false)}
       />
     )}
+    {showEmailModal && (
+      <EmailComposer
+        lead={{
+          email: lead.email,
+          contactName: lead.contactName,
+          companyName: lead.companyName,
+        }}
+        onClose={() => setShowEmailModal(false)}
+      />
+    )}
     <div
       className="rounded-xl card-hover-lift"
       style={{
         background: 'rgba(255,255,255,0.03)',
-        border: `1px solid ${isVerified ? 'rgba(16,185,129,0.25)' : 'rgba(245,158,11,0.2)'}`,
+        border: `1px solid ${isVerified ? 'rgba(16,185,129,0.25)' : 'rgba(100,116,139,0.2)'}`,
         borderLeftWidth: '3px',
-        borderLeftColor: isVerified ? '#10b981' : '#f59e0b',
+        borderLeftColor: isVerified ? '#10b981' : '#475569',
       }}
     >
       <div className="p-5">
@@ -246,7 +258,7 @@ export function LeadCard({ lead, isPremium = false }: { lead: Lead; isPremium?: 
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
             <div className="space-y-2 flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <Building2 className="h-4 w-4 shrink-0" style={{ color: '#FFB800' }} />
+                <Building2 className="h-4 w-4 shrink-0" style={{ color: 'var(--brand-primary)' }} />
                 <h3 className="font-semibold text-base text-white">{lead.companyName}</h3>
                 {/* Confidence badge */}
                 <span
@@ -254,7 +266,7 @@ export function LeadCard({ lead, isPremium = false }: { lead: Lead; isPremium?: 
                   style={
                     isVerified
                       ? { background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.3)' }
-                      : { background: 'rgba(245,158,11,0.12)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.25)' }
+                      : { background: 'rgba(100,116,139,0.12)', color: '#94a3b8', border: '1px solid rgba(100,116,139,0.25)' }
                   }
                 >
                   {isVerified ? 'Verified' : 'Generated'}
@@ -264,9 +276,9 @@ export function LeadCard({ lead, isPremium = false }: { lead: Lead; isPremium?: 
                 <span
                   className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
                   style={{
-                    background: 'rgba(255,184,0,0.12)',
-                    border: '1px solid rgba(255,184,0,0.25)',
-                    color: '#FFB800',
+                    background: 'color-mix(in srgb, var(--brand-primary) 12%, transparent)',
+                    border: '1px solid color-mix(in srgb, var(--brand-primary) 25%, transparent)',
+                    color: 'var(--brand-primary)',
                   }}
                 >
                   {lead.industry}
@@ -311,9 +323,9 @@ export function LeadCard({ lead, isPremium = false }: { lead: Lead; isPremium?: 
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors hover:opacity-90"
                 style={{
-                  color: '#FFB800',
-                  background: 'rgba(255,184,0,0.08)',
-                  border: '1px solid rgba(255,184,0,0.2)',
+                  color: 'var(--brand-primary)',
+                  background: 'color-mix(in srgb, var(--brand-primary) 8%, transparent)',
+                  border: '1px solid color-mix(in srgb, var(--brand-primary) 20%, transparent)',
                   minHeight: '36px',
                 }}
               >
@@ -337,6 +349,24 @@ export function LeadCard({ lead, isPremium = false }: { lead: Lead; isPremium?: 
                 <Map className="h-3.5 w-3.5" />
                 Maps
               </a>
+              {/* Cold email composer */}
+              {lead.email && (
+                <button
+                  type="button"
+                  onClick={() => setShowEmailModal(true)}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 hover:opacity-80"
+                  style={{
+                    color: 'var(--brand-primary)',
+                    background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)',
+                    border: '1px solid color-mix(in srgb, var(--brand-primary) 20%, transparent)',
+                    minHeight: '34px',
+                  }}
+                  title="Send cold email"
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  Email
+                </button>
+              )}
             </div>
           </div>
 
@@ -429,9 +459,9 @@ export function LeadCard({ lead, isPremium = false }: { lead: Lead; isPremium?: 
                 <span
                   className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
                   style={{
-                    background: 'rgba(255,184,0,0.12)',
-                    border: '1px solid rgba(255,184,0,0.3)',
-                    color: '#FFB800',
+                    background: 'color-mix(in srgb, var(--brand-primary) 12%, transparent)',
+                    border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',
+                    color: 'var(--brand-primary)',
                   }}
                   title="Upgrade to unlock WhatsApp contacts"
                 >

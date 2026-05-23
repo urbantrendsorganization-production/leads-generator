@@ -7,9 +7,9 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
-import { setToken, setUser, GOOGLE_CLIENT_ID } from '@/lib/auth';
+import { setToken, setUser } from '@/lib/auth';
 import { Loader2, ArrowRight, CheckCircle2, Gift } from 'lucide-react';
-import { GoogleLogin, CredentialResponse, GoogleOAuthProvider } from '@react-oauth/google';
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -73,7 +73,7 @@ export default function RegisterPage() {
         <div
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(135deg, rgba(255,184,0,0.2) 0%, rgba(13,13,13,0.8) 55%, rgba(13,13,13,0.95) 100%)',
+            background: 'linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 20%, transparent) 0%, rgba(13,13,13,0.8) 55%, rgba(13,13,13,0.95) 100%)',
           }}
         />
         {/* Brand content */}
@@ -81,16 +81,15 @@ export default function RegisterPage() {
           <div className="flex items-center gap-3">
             <div
               className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0"
-              style={{ background: '#FFB800' }}
+              style={{ background: 'var(--brand-primary)', boxShadow: '0 0 16px var(--brand-primary-glow)' }}
             >
-              <img
-                src="https://res.cloudinary.com/dvifkm1ex/image/upload/v1774512463/t_x4jvlv.png"
-                alt=""
-                className="h-5 w-5 object-contain"
-              />
+              <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5">
+                <path d="M3 14L8 7.5L12 11L17 4" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="17" cy="4" r="2" fill="white" opacity="0.9" />
+              </svg>
             </div>
             <span className="font-black text-white text-xl tracking-tight">
-              TRENDYY <span style={{ color: '#FFB800' }}>LEADS</span>
+              TRENDYY <span style={{ color: 'var(--brand-primary)' }}>LEADS</span>
             </span>
           </div>
 
@@ -99,9 +98,9 @@ export default function RegisterPage() {
             <div
               className="inline-flex items-center gap-2 rounded-full px-4 py-2 mb-6 text-sm font-bold"
               style={{
-                background: 'rgba(255,184,0,0.12)',
-                border: '1px solid rgba(255,184,0,0.3)',
-                color: '#FFB800',
+                background: 'color-mix(in srgb, var(--brand-primary) 12%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',
+                color: 'var(--brand-primary)',
               }}
             >
               <Gift className="h-4 w-4" />
@@ -122,7 +121,7 @@ export default function RegisterPage() {
                 'Verified data updated every 24 hours',
               ].map((item) => (
                 <div key={item} className="flex items-center gap-3">
-                  <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: '#FFB800' }} />
+                  <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: 'var(--brand-primary)' }} />
                   <span className="text-zinc-300 text-sm font-medium">{item}</span>
                 </div>
               ))}
@@ -143,7 +142,7 @@ export default function RegisterPage() {
         {/* Subtle glow */}
         <div
           className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 opacity-10 blur-3xl lg:opacity-5"
-          style={{ background: 'radial-gradient(circle, #FFB800 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle, var(--brand-primary) 0%, transparent 70%)' }}
         />
 
         <div className="relative w-full max-w-md animate-fade-in">
@@ -152,16 +151,15 @@ export default function RegisterPage() {
           <div className="flex items-center justify-center gap-2 mb-8 lg:hidden">
             <div
               className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0"
-              style={{ background: '#FFB800' }}
+              style={{ background: 'var(--brand-primary)', boxShadow: '0 0 16px var(--brand-primary-glow)' }}
             >
-              <img
-                src="https://res.cloudinary.com/dvifkm1ex/image/upload/v1774512463/t_x4jvlv.png"
-                alt=""
-                className="h-5 w-5 object-contain"
-              />
+              <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5">
+                <path d="M3 14L8 7.5L12 11L17 4" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="17" cy="4" r="2" fill="white" opacity="0.9" />
+              </svg>
             </div>
             <span className="font-black text-white text-xl tracking-tight">
-              TRENDYY <span style={{ color: '#FFB800' }}>LEADS</span>
+              TRENDYY <span style={{ color: 'var(--brand-primary)' }}>LEADS</span>
             </span>
           </div>
 
@@ -169,9 +167,9 @@ export default function RegisterPage() {
           <div
             className="flex items-center justify-center gap-2 rounded-full px-4 py-2 mb-6 text-sm font-bold mx-auto w-fit lg:hidden"
             style={{
-              background: 'rgba(255,184,0,0.12)',
-              border: '1px solid rgba(255,184,0,0.3)',
-              color: '#FFB800',
+              background: 'color-mix(in srgb, var(--brand-primary) 12%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',
+              color: 'var(--brand-primary)',
             }}
           >
             <Gift className="h-4 w-4" />
@@ -182,7 +180,7 @@ export default function RegisterPage() {
             className="rounded-2xl p-8"
             style={{
               background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,184,0,0.15)',
+              border: '1px solid color-mix(in srgb, var(--brand-primary) 15%, transparent)',
               backdropFilter: 'blur(16px)',
             }}
           >
@@ -203,7 +201,7 @@ export default function RegisterPage() {
                   onChange={(e) => setName(e.target.value)}
                   style={{
                     background: 'rgba(255,255,255,0.05)',
-                    borderColor: 'rgba(255,184,0,0.2)',
+                    borderColor: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)',
                     minHeight: '44px',
                   }}
                 />
@@ -221,7 +219,7 @@ export default function RegisterPage() {
                   required
                   style={{
                     background: 'rgba(255,255,255,0.05)',
-                    borderColor: 'rgba(255,184,0,0.2)',
+                    borderColor: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)',
                     minHeight: '44px',
                   }}
                 />
@@ -240,7 +238,7 @@ export default function RegisterPage() {
                   minLength={8}
                   style={{
                     background: 'rgba(255,255,255,0.05)',
-                    borderColor: 'rgba(255,184,0,0.2)',
+                    borderColor: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)',
                     minHeight: '44px',
                   }}
                 />
@@ -262,7 +260,7 @@ export default function RegisterPage() {
                 className="w-full btn-shimmer btn-primary-hover font-black border-0"
                 size="lg"
                 disabled={loading}
-                style={{ background: '#FFB800', color: '#0a0a0a', minHeight: '48px' }}
+                style={{ background: 'var(--brand-primary)', color: '#ffffff', minHeight: '48px' }}
               >
                 {loading ? (
                   <>
@@ -288,23 +286,21 @@ export default function RegisterPage() {
               </div>
 
               <div className="flex justify-center w-full">
-                <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => setError('Google registration failed')}
-                    theme="filled_black"
-                    shape="rectangular"
-                    width="350"
-                    size="large"
-                    text="signup_with"
-                  />
-                </GoogleOAuthProvider>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError('Google registration failed')}
+                  theme="filled_black"
+                  shape="rectangular"
+                  width="350"
+                  size="large"
+                  text="signup_with"
+                />
               </div>
             </div>
 
             <p className="mt-6 text-center text-sm text-zinc-500">
               Already have an account?{' '}
-              <Link href="/login" className="font-semibold hover:underline" style={{ color: '#FFB800' }}>
+              <Link href="/login" className="font-semibold hover:underline" style={{ color: 'var(--brand-primary)' }}>
                 Log in
               </Link>
             </p>

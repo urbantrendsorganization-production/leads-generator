@@ -60,17 +60,16 @@ export function Navbar() {
             <div className="flex items-center gap-8">
               <Link href="/" className="flex items-center gap-2.5 group shrink-0">
                 <div
-                  className="flex h-8 w-8 items-center justify-center rounded-lg shadow-lg transition-all duration-300 group-hover:shadow-[0_0_16px_rgba(255,184,0,0.4)]"
-                  style={{ background: '#FFB800' }}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-300"
+                  style={{ background: 'var(--brand-primary)', boxShadow: '0 0 16px var(--brand-primary-glow)' }}
                 >
-                  <img
-                    src="https://res.cloudinary.com/dvifkm1ex/image/upload/v1774512463/t_x4jvlv.png"
-                    alt="Logo"
-                    className="h-5 w-5 object-contain"
-                  />
+                  <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5">
+                    <path d="M3 14L8 7.5L12 11L17 4" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx="17" cy="4" r="2" fill="white" opacity="0.9" />
+                  </svg>
                 </div>
                 <span className="text-lg font-black tracking-tight text-white">
-                  TRENDYY <span style={{ color: '#FFB800' }}>LEADS</span>
+                  TRENDYY <span style={{ color: 'var(--brand-primary)' }}>LEADS</span>
                 </span>
               </Link>
 
@@ -102,9 +101,9 @@ export function Navbar() {
                   <div
                     className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-black"
                     style={{
-                      background: 'rgba(255,184,0,0.1)',
-                      border: '1px solid rgba(255,184,0,0.25)',
-                      color: '#FFB800',
+                      background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)',
+                      border: '1px solid color-mix(in srgb, var(--brand-primary) 28%, transparent)',
+                      color: 'var(--brand-primary)',
                     }}
                   >
                     <Coins className="h-3.5 w-3.5" />
@@ -137,9 +136,9 @@ export function Navbar() {
                     <button
                       className="btn-primary-hover inline-flex items-center gap-1.5 px-4 py-2 text-sm font-black rounded-lg transition-all duration-200"
                       style={{
-                        background: '#FFB800',
-                        color: '#0a0a0a',
-                        boxShadow: '0 0 20px rgba(255,184,0,0.25)',
+                        background: 'var(--brand-primary)',
+                        color: '#ffffff',
+                        boxShadow: '0 0 20px var(--brand-primary-glow)',
                       }}
                     >
                       Get Started
@@ -177,8 +176,8 @@ export function Navbar() {
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center justify-between rounded-xl px-4 py-4 text-base font-semibold transition-all duration-200"
                 style={{
-                  color: pathname === link.href ? '#FFB800' : '#888888',
-                  background: pathname === link.href ? 'rgba(255,184,0,0.07)' : 'transparent',
+                  color: pathname === link.href ? 'var(--brand-primary)' : '#888888',
+                  background: pathname === link.href ? 'color-mix(in srgb, var(--brand-primary) 8%, transparent)' : 'transparent',
                   borderBottom: '1px solid rgba(255,255,255,0.04)',
                 }}
               >
@@ -194,10 +193,10 @@ export function Navbar() {
               <div className="space-y-3">
                 <div
                   className="flex items-center justify-between rounded-xl px-4 py-3"
-                  style={{ background: 'rgba(255,184,0,0.08)', border: '1px solid rgba(255,184,0,0.2)' }}
+                  style={{ background: 'color-mix(in srgb, var(--brand-primary) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent)' }}
                 >
-                  <span className="text-sm font-bold" style={{ color: '#FFB800' }}>Token Balance</span>
-                  <span className="inline-flex items-center gap-1.5 font-black text-sm" style={{ color: '#FFB800' }}>
+                  <span className="text-sm font-bold" style={{ color: 'var(--brand-primary)' }}>Token Balance</span>
+                  <span className="inline-flex items-center gap-1.5 font-black text-sm" style={{ color: 'var(--brand-primary)' }}>
                     <Coins className="h-4 w-4" />
                     {user?.tokenBalance ?? 0} tokens
                   </span>
@@ -224,7 +223,7 @@ export function Navbar() {
                 <Link href="/register" onClick={() => setMenuOpen(false)}>
                   <button
                     className="w-full rounded-xl px-4 py-3.5 text-sm font-black transition-all duration-200"
-                    style={{ background: '#FFB800', color: '#0a0a0a' }}
+                    style={{ background: 'var(--brand-primary)', color: '#ffffff' }}
                   >
                     Join Free
                   </button>

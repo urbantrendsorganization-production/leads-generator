@@ -3,14 +3,7 @@ import crypto from 'crypto';
 import { prisma } from '../utils/prisma';
 import { signToken } from '../utils/jwt';
 import { auditLog } from '../utils/auditLog';
-import { z } from 'zod';
 import { passwordSchema } from './auth.service';
-
-export const createPromoSchema = z.object({
-  code: z.string().min(3).max(30).transform(s => s.toUpperCase().trim()),
-  tokensGrant: z.number().int().min(1).max(99999),
-  maxUses: z.number().int().min(1).nullable().optional(),
-});
 
 // ─── Users ──────────────────────────────────────────────────────────────────
 
@@ -25,10 +18,7 @@ export async function listUsers() {
       tokenBalance: true,
       createdAt: true,
       _count: {
-        select: {
-          searches: true,
-          transactions: true,
-        },
+        select: { searches: true },
       },
     },
   });
@@ -106,11 +96,8 @@ export async function deleteUser(adminEmail: string, userId: string, currentUser
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw new Error('User not found');
 
-  // Delete related records first
   await prisma.$transaction([
-    prisma.promoRedemption.deleteMany({ where: { userId } }),
     prisma.search.deleteMany({ where: { userId } }),
-    prisma.transaction.deleteMany({ where: { userId } }),
     prisma.user.delete({ where: { id: userId } }),
   ]);
 
@@ -135,112 +122,6 @@ export async function resetUserPassword(adminEmail: string, userId: string) {
 
   auditLog.record(adminEmail, 'RESET_PASSWORD', user.email, '');
   return { tempPassword };
-}
-
-// ─── Promo Codes ────────────────────────────────────────────────────────────
-
-export async function listPromoCodes() {
-  const promos = await prisma.promoCode.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: {
-      _count: {
-        select: { redemptions: true },
-      },
-    },
-  });
-
-  return promos;
-}
-
-export async function createPromoCode(adminEmail: string, data: z.infer<typeof createPromoSchema>) {
-  const existing = await prisma.promoCode.findUnique({ where: { code: data.code } });
-  if (existing) {
-    throw new Error('Promo code already exists');
-  }
-
-  const promo = await prisma.promoCode.create({
-    data: {
-      code: data.code,
-      tokensGrant: data.tokensGrant,
-      maxUses: data.maxUses ?? null,
-    },
-  });
-
-  auditLog.record(adminEmail, 'CREATE_PROMO', data.code, `tokens=${data.tokensGrant}`);
-  return promo;
-}
-
-export async function togglePromoCode(adminEmail: string, id: string, active: boolean) {
-  const promo = await prisma.promoCode.update({
-    where: { id },
-    data: { active },
-  });
-
-  auditLog.record(adminEmail, 'TOGGLE_PROMO', promo.code, `active=${active}`);
-  return promo;
-}
-
-// ─── Pricing Tiers ──────────────────────────────────────────────────────────
-
-export async function listPricingTiers() {
-  const tiers = await prisma.pricingTier.findMany({
-    orderBy: { sortOrder: 'asc' },
-  });
-  return tiers;
-}
-
-export async function updatePricingTier(
-  adminEmail: string,
-  tierId: string,
-  data: {
-    name?: string;
-    price?: number;
-    tokens?: number;
-    description?: string;
-    popular?: boolean;
-    active?: boolean;
-    sortOrder?: number;
-  },
-) {
-  const tier = await prisma.pricingTier.update({
-    where: { tierId },
-    data,
-  });
-  auditLog.record(adminEmail, 'UPDATE_PRICING_TIER', tierId, JSON.stringify(data));
-  return tier;
-}
-
-export async function createPricingTier(
-  adminEmail: string,
-  data: {
-    tierId: string;
-    name: string;
-    price: number;
-    tokens: number;
-    description: string;
-    popular?: boolean;
-    sortOrder?: number;
-  },
-) {
-  const existing = await prisma.pricingTier.findUnique({ where: { tierId: data.tierId } });
-  if (existing) {
-    throw new Error('Tier ID already exists');
-  }
-
-  const tier = await prisma.pricingTier.create({
-    data: {
-      tierId: data.tierId,
-      name: data.name,
-      price: data.price,
-      tokens: data.tokens,
-      description: data.description,
-      popular: data.popular ?? false,
-      sortOrder: data.sortOrder ?? 0,
-    },
-  });
-
-  auditLog.record(adminEmail, 'CREATE_PRICING_TIER', data.tierId, `price=${data.price}`);
-  return tier;
 }
 
 // ─── Lead Templates ─────────────────────────────────────────────────────────
@@ -270,25 +151,11 @@ export async function upsertLeadTemplate(
 // ─── Analytics ──────────────────────────────────────────────────────────────
 
 export async function getAnalytics() {
-  const [
-    totalUsers,
-    totalSearches,
-    totalRevenue,
-    recentSearches,
-    topUsers,
-  ] = await Promise.all([
+  const [totalUsers, totalSearches, recentSearches, topUsers] = await Promise.all([
     prisma.user.count(),
     prisma.search.count(),
-    prisma.transaction.aggregate({
-      where: { status: 'completed' },
-      _sum: { amount: true },
-    }),
     prisma.search.count({
-      where: {
-        createdAt: {
-          gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        },
-      },
+      where: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
     }),
     prisma.user.findMany({
       orderBy: { searches: { _count: 'desc' } },
@@ -303,11 +170,5 @@ export async function getAnalytics() {
     }),
   ]);
 
-  return {
-    totalUsers,
-    totalSearches,
-    totalRevenue: totalRevenue._sum.amount || 0,
-    searchesLast24h: recentSearches,
-    topUsers,
-  };
+  return { totalUsers, totalSearches, searchesLast24h: recentSearches, topUsers };
 }

@@ -1,14 +1,7 @@
 import { Router, Request, Response } from 'express';
 import {
   listUsers,
-  listPromoCodes,
-  createPromoCode,
-  togglePromoCode,
   getAnalytics,
-  createPromoSchema,
-  listPricingTiers,
-  updatePricingTier,
-  createPricingTier,
   listLeadTemplates,
   upsertLeadTemplate,
   createStaff,
@@ -86,82 +79,6 @@ adminRouter.post('/users/:id/reset-password', async (req: Request, res: Response
   try {
     const result = await resetUserPassword(req.user!.email, req.params.id as string);
     res.json(result);
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// ─── Promo Codes ────────────────────────────────────────────────────────────
-
-adminRouter.get('/promos', async (_req: Request, res: Response) => {
-  try {
-    const promos = await listPromoCodes();
-    res.json(promos);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-adminRouter.post('/promos', async (req: Request, res: Response) => {
-  try {
-    const data = createPromoSchema.parse(req.body);
-    const promo = await createPromoCode(req.user!.email, data);
-    res.status(201).json(promo);
-  } catch (error: any) {
-    if (error.name === 'ZodError') {
-      res.status(400).json({ error: 'Validation failed', details: error.errors });
-      return;
-    }
-    res.status(400).json({ error: error.message });
-  }
-});
-
-adminRouter.patch('/promos/:id', async (req: Request, res: Response) => {
-  try {
-    const { active } = req.body;
-    if (typeof active !== 'boolean') {
-      res.status(400).json({ error: 'active must be a boolean' });
-      return;
-    }
-    const promoId = req.params.id as string;
-    const promo = await togglePromoCode(req.user!.email, promoId, active);
-    res.json(promo);
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// ─── Pricing Tiers ──────────────────────────────────────────────────────────
-
-adminRouter.get('/pricing', async (_req: Request, res: Response) => {
-  try {
-    const tiers = await listPricingTiers();
-    res.json(tiers);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-adminRouter.patch('/pricing/:tierId', async (req: Request, res: Response) => {
-  try {
-    const tier = await updatePricingTier(req.user!.email, req.params.tierId as string, req.body);
-    res.json(tier);
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-adminRouter.post('/pricing', async (req: Request, res: Response) => {
-  try {
-    const { tierId, name, price, tokens, description, popular, sortOrder } = req.body;
-    if (!tierId || !name || price === undefined || tokens === undefined || !description) {
-      res.status(400).json({ error: 'tierId, name, price, tokens, and description are required' });
-      return;
-    }
-    const tier = await createPricingTier(req.user!.email, {
-      tierId, name, price, tokens, description, popular, sortOrder,
-    });
-    res.status(201).json(tier);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }

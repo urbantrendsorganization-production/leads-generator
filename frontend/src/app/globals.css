@@ -3,61 +3,61 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Light mode — bold street energy on white */
+  /* Configurable brand — overridden by ThemeProvider on mount */
+  --brand-primary: #0D9488;
+  --brand-accent:  #0D9488;
+  --brand-primary-glow: rgba(13, 148, 136, 0.35);
+  --brand-accent-glow:  rgba(13, 148, 136, 0.35);
+
+  /* Derived tokens */
   --background: #f5f5f5;
   --foreground: #0a0a0a;
   --card: #ffffff;
   --card-foreground: #0a0a0a;
   --popover: #ffffff;
   --popover-foreground: #0a0a0a;
-  --primary: #FFB800;
-  --primary-foreground: #0a0a0a;
+  --primary: var(--brand-primary);
+  --primary-foreground: #ffffff;
   --secondary: #1a1a1a;
-  --secondary-foreground: #FFB800;
+  --secondary-foreground: var(--brand-primary);
   --muted: #e8e8e8;
   --muted-foreground: #555555;
-  --accent: #FFB800;
+  --accent: var(--brand-accent);
   --accent-foreground: #0a0a0a;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --border: #d4d4d4;
   --input: #d4d4d4;
-  --ring: #FFB800;
+  --ring: var(--brand-primary);
   --radius: 0.75rem;
 
-  /* Brand extended palette */
-  --brand-yellow: #FFB800;
-  --brand-gold: #F5C400;
   --brand-black: #0a0a0a;
   --brand-dark: #111111;
   --brand-card: #1a1a1a;
-  --brand-glow-yellow: rgba(255, 184, 0, 0.4);
-  --brand-glow-gold: rgba(245, 196, 0, 0.35);
   --success: #10b981;
-  --warning: #f59e0b;
+  --warning: #94a3b8;
 }
 
 .dark {
-  /* Dark mode — near-black with yellow/gold accents */
   --background: #0d0d0d;
   --foreground: #ffffff;
   --card: #1a1a1a;
   --card-foreground: #ffffff;
   --popover: #1a1a1a;
   --popover-foreground: #ffffff;
-  --primary: #FFB800;
-  --primary-foreground: #0a0a0a;
+  --primary: var(--brand-primary);
+  --primary-foreground: #ffffff;
   --secondary: #222222;
-  --secondary-foreground: #FFB800;
+  --secondary-foreground: var(--brand-primary);
   --muted: #1a1a1a;
   --muted-foreground: #888888;
-  --accent: #FFB800;
+  --accent: var(--brand-accent);
   --accent-foreground: #0a0a0a;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --border: #2a2a2a;
   --input: #2a2a2a;
-  --ring: #FFB800;
+  --ring: var(--brand-primary);
 }
 
 @theme inline {
@@ -84,8 +84,9 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-plus-jakarta), var(--font-inter);
+  --font-mono: var(--font-share-tech);
+  --font-heading: var(--font-quantico);
 }
 
 * {
@@ -111,8 +112,8 @@ body {
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px 4px var(--brand-glow-yellow); }
-  50%       { box-shadow: 0 0 35px 8px var(--brand-glow-gold); }
+  0%, 100% { box-shadow: 0 0 20px 4px var(--brand-primary-glow); }
+  50%       { box-shadow: 0 0 35px 8px var(--brand-primary-glow); }
 }
 
 @keyframes float {
@@ -144,13 +145,13 @@ body {
   opacity: 0;
 }
 
-/* ── Gold accent text ──────────────────────────────────────────────────── */
+/* ── Brand accent text ─────────────────────────────────────────────────── */
 .gradient-text {
-  color: #FFB800;
+  color: var(--brand-primary);
 }
 
 .gradient-text-animated {
-  background: linear-gradient(270deg, #FFB800, #F5C400, #FFD54F, #FFB800);
+  background: linear-gradient(270deg, var(--brand-primary), var(--brand-primary), var(--brand-accent), var(--brand-primary));
   background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -158,17 +159,17 @@ body {
   animation: gradient-shift 4s ease infinite;
 }
 
-/* ── Solid yellow/gold button background ──────────────────────────────── */
+/* ── Solid brand button background ────────────────────────────────────── */
 .gradient-bg {
-  background: #FFB800;
-  color: #0a0a0a;
+  background: var(--brand-primary);
+  color: #fff;
 }
 
 .gradient-bg-animated {
-  background: linear-gradient(270deg, #FFB800, #F5C400, #FFD54F, #FFB800);
+  background: linear-gradient(270deg, var(--brand-primary), var(--brand-primary), var(--brand-accent), var(--brand-primary));
   background-size: 300% 300%;
   animation: gradient-shift 6s ease infinite;
-  color: #0a0a0a;
+  color: #fff;
 }
 
 /* ── Glassmorphism ─────────────────────────────────────────────────────── */
@@ -187,28 +188,19 @@ body {
 }
 
 /* ── Glow utilities ────────────────────────────────────────────────────── */
-.glow-yellow {
-  box-shadow: 0 0 24px 4px var(--brand-glow-yellow);
-}
-
-.glow-gold {
-  box-shadow: 0 0 24px 4px var(--brand-glow-gold);
-}
-
-/* Keep legacy names so existing usages don't break */
 .glow-purple {
-  box-shadow: 0 0 24px 4px var(--brand-glow-yellow);
+  box-shadow: 0 0 24px 4px var(--brand-primary-glow);
 }
 
 .glow-cyan {
-  box-shadow: 0 0 24px 4px var(--brand-glow-gold);
+  box-shadow: 0 0 24px 4px var(--brand-primary-glow);
 }
 
 .glow-pulse {
   animation: glow-pulse 3s ease-in-out infinite;
 }
 
-/* ── Gold border card ─────────────────────────────────────────────────── */
+/* ── Brand border card ────────────────────────────────────────────────── */
 .gradient-border {
   position: relative;
   border: none !important;
@@ -219,7 +211,7 @@ body {
   inset: 0;
   border-radius: inherit;
   padding: 1.5px;
-  background: #FFB800;
+  background: var(--brand-primary);
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
@@ -252,17 +244,17 @@ body {
 .hero-mesh {
   background-color: #0d0d0d;
   background-image:
-    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(255, 184, 0, 0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 10%, rgba(245, 196, 0, 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(255, 184, 0, 0.07) 0%, transparent 60%);
+    radial-gradient(ellipse 80% 60% at 20% 0%, var(--brand-primary-glow) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 10%, var(--brand-primary-glow) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, var(--brand-primary-glow) 0%, transparent 60%);
 }
 
 .dark .hero-mesh {
   background-color: #0d0d0d;
   background-image:
-    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(255, 184, 0, 0.15) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 10%, rgba(245, 196, 0, 0.1) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(255, 184, 0, 0.08) 0%, transparent 60%);
+    radial-gradient(ellipse 80% 60% at 20% 0%, var(--brand-primary-glow) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 10%, var(--brand-primary-glow) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, var(--brand-primary-glow) 0%, transparent 60%);
 }
 
 /* ── Float animation ───────────────────────────────────────────────────── */
@@ -270,9 +262,9 @@ body {
   animation: float 4s ease-in-out infinite;
 }
 
-/* ── Hero headline gradient text (gold → amber) ─────────────────────────── */
+/* ── Hero headline gradient text ────────────────────────────────────────── */
 .hero-gradient-text {
-  background: linear-gradient(135deg, #FFB800 0%, #FFD54F 40%, #f59e0b 100%);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary) 40%, var(--brand-accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -301,9 +293,9 @@ body {
   100% { background-position: -200% center; }
 }
 
-/* ── Gold focus ring for accessibility ──────────────────────────────────── */
+/* ── Brand focus ring for accessibility ─────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid #FFB800;
+  outline: 2px solid var(--brand-primary);
   outline-offset: 2px;
 }
 
@@ -311,7 +303,7 @@ body {
 .dashboard-bg {
   background-color: #0d0d0d;
   background-image:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,184,0,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 50% at 50% 0%, color-mix(in srgb, var(--brand-primary) 6%, transparent) 0%, transparent 60%),
     radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0);
   background-size: auto, 28px 28px;
 }
@@ -320,8 +312,8 @@ body {
 .auth-brand-panel {
   background-color: #0d0d0d;
   background-image:
-    radial-gradient(ellipse 80% 60% at 30% 30%, rgba(255,184,0,0.18) 0%, transparent 65%),
-    radial-gradient(ellipse 50% 50% at 70% 70%, rgba(245,196,0,0.1) 0%, transparent 65%);
+    radial-gradient(ellipse 80% 60% at 30% 30%, color-mix(in srgb, var(--brand-primary) 18%, transparent) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 50% at 70% 70%, color-mix(in srgb, var(--brand-primary) 10%, transparent) 0%, transparent 65%);
 }
 
 /* ── Card lift hover ─────────────────────────────────────────────────────── */
@@ -330,7 +322,7 @@ body {
 }
 .card-hover-lift:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(255,184,0,0.08);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px color-mix(in srgb, var(--brand-primary) 8%, transparent);
 }
 
 /* ── Button premium hover ────────────────────────────────────────────────── */
@@ -370,4 +362,33 @@ body {
 }
 .comparison-row:hover {
   background: rgba(255, 255, 255, 0.015) !important;
+}
+
+/* ── Brand utilities (v2) ───────────────────────────────────────────────── */
+.text-brand { color: var(--brand-primary); }
+.bg-brand { background: var(--brand-primary); color: #fff; }
+.border-brand { border-color: var(--brand-primary); }
+.glow-brand { box-shadow: 0 0 24px 4px var(--brand-primary-glow); }
+
+/* ── Dot grid overlay ─────────────────────────────────────────────────────── */
+.dot-grid-bg {
+  background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* ── Gradient text with brand primary ─────────────────────────────────────── */
+.hero-gradient-text-brand {
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #5eead4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Rotating word animation ──────────────────────────────────────────────── */
+@keyframes word-fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.word-fade-in {
+  animation: word-fade-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
